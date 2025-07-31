@@ -1,5 +1,5 @@
 import { cspellConfig } from '@kitschpatrol/cspell-config'
 
 export default cspellConfig({
-	words: ['itson'],
+	words: ['itson', 'keytar', 'mdls'],
 })

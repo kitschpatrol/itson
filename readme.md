@@ -110,3 +110,13 @@ _State anyone or anything that significantly helped with the development of your
 [MIT](license.txt) © Eric Mika
 
 <!-- /license -->
+
+---
+
+## Dev Notes
+
+Github PAT must have contents:read and metadata:read permissions.
+
+Keytar forks:
+
+https://github.com/makeproaudio/node-keytar
