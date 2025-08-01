@@ -1,4 +1,6 @@
-export default {
+import { itsonConfig } from './src/lib/config'
+
+export default itsonConfig({
 	applications: [
 		{
 			command: '/Applications/AllWork.app/Contents/MacOS/AllWork',
@@ -13,4 +15,4 @@ export default {
 		},
 	],
 	runOnStartup: true,
-}
+})

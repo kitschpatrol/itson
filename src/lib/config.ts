@@ -27,3 +27,11 @@ export type ItsonConfig = {
 	// TODO more stuff
 	runOnStartup: boolean
 }
+
+/**
+ * Itson configuration factory function for type safety.
+ * @public
+ */
+export function itsonConfig(config: ItsonConfig): ItsonConfig {
+	return config
+}
