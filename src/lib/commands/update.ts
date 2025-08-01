@@ -202,21 +202,24 @@ export async function updateApplicationFromGitHubRelease(
  */
 export async function updateAllApplications(config: ItsonConfig) {
 	for (const application of config.applications) {
-		const downloadedPaths = await updateApplicationFromGitHubRelease(
-			application.owner,
-			application.repo,
-			application.destination,
-			application.namePattern,
-		)
+		if (application.updates !== undefined) {
+			const downloadedPaths = await updateApplicationFromGitHubRelease(
+				application.updates.owner,
+				application.updates.repo,
+				application.updates.destination,
+				application.updates.namePattern,
+			)
 
-		for (const downloadedPath of downloadedPaths) {
-			if (downloadedPath) {
-				const version = await getVersion(downloadedPath)
-				if (version) {
-					consola.success(`Version of ${basename(downloadedPath)}: ${version}`)
+			for (const downloadedPath of downloadedPaths) {
+				if (downloadedPath) {
+					const version = await getVersion(downloadedPath)
+					// eslint-disable-next-line max-depth
+					if (version) {
+						consola.success(`Version of ${basename(downloadedPath)}: ${version}`)
+					}
+				} else {
+					consola.error(`No downloaded path for ${application.name}`)
 				}
-			} else {
-				consola.error(`No downloaded path for ${application.name}`)
 			}
 		}
 	}

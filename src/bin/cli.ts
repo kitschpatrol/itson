@@ -5,6 +5,8 @@ import { clearCredentials } from '../lib/commands/clear-credentials'
 import { updateAllApplications } from '../lib/commands/update'
 import { loadConfig } from 'c12'
 import { ItsonConfig } from '../lib/config'
+import { startAllApplications } from '../lib/commands/start'
+import { stopAllApplications } from '../lib/commands/stop'
 
 const { config } = await loadConfig<ItsonConfig>({ name: 'itson' })
 
@@ -24,6 +26,22 @@ await yargsInstance
 		() => {},
 		async ({ verbose }) => {
 			await updateAllApplications(config)
+		},
+	)
+	.command(
+		'start',
+		'Start all managed applications to the latest version, or install them if they are not present',
+		() => {},
+		async ({ verbose }) => {
+			await startAllApplications(config)
+		},
+	)
+	.command(
+		'stop',
+		'Stop all managed applications',
+		() => {},
+		async ({ verbose }) => {
+			await stopAllApplications(config)
 		},
 	)
 	.command(

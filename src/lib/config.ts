@@ -1,13 +1,22 @@
 /**
+ * TODO more strategies
  * @public
  */
-export type ItsonConfigApplication = {
+export type ItsonUpdateStrategyGitHub = {
 	destination: string
-	name: string
 	namePattern: RegExp
 	owner: string
 	repo: string
 	type: 'github'
+}
+
+/**
+ * @public
+ */
+export type ItsonConfigApplication = {
+	command: string
+	name: string
+	updates?: ItsonUpdateStrategyGitHub
 }
 
 /**

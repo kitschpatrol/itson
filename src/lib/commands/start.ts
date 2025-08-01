@@ -1,18 +1,28 @@
 import { consola } from 'consola'
-import type { ItsonConfig, ItsonConfigApplication } from '../config'
+import type { ItsonConfig } from '../config'
+import { registerItson, startApp, unregisterItson } from '../service'
+import { updateAllApplications } from './update'
 
 /**
- * Start an application
+ * Start all applications, default behavior
  */
-export function startApplication(application: ItsonConfigApplication) {
-	consola.warn(`Start implementation pending for ${application.name}`)
-}
+export async function startAllApplications(config: ItsonConfig) {
+	consola.info('Starting all applications')
 
-/**
- * Start all applications
- */
-export function startAllApplications(config: ItsonConfig) {
+	// Register itson if appropriate
+	if (config.runOnStartup) {
+		consola.info('Registering itson')
+		await registerItson()
+	} else {
+		consola.info('Unregistering itson')
+		await unregisterItson()
+	}
+
+	// Update all applications
+	await updateAllApplications(config)
+
+	// Start all applications
 	for (const application of config.applications) {
-		startApplication(application)
+		await startApp(application)
 	}
 }
