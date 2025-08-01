@@ -7,7 +7,7 @@ export default itsonConfig({
 			name: 'AllWork',
 			updates: {
 				destination: '/Applications/AllWork.app',
-				namePattern: /^AllWork.+\.zip$/,
+				artifactPattern: /^AllWork.+\.zip$/,
 				owner: 'kitschpatrol',
 				repo: 'allwork',
 				type: 'github',

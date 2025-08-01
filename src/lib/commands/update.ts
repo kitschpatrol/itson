@@ -153,7 +153,7 @@ export async function updateApplicationFromGitHubRelease(
 	owner: string,
 	repo: string,
 	destination: string,
-	namePattern: RegExp,
+	artifactPattern: RegExp,
 ): Promise<Array<string | undefined>> {
 	const downloadedPaths: Array<string | undefined> = []
 
@@ -169,7 +169,9 @@ export async function updateApplicationFromGitHubRelease(
 		return downloadedPaths
 	}
 
-	const filteredArtifacts = release.artifacts.filter((artifact) => namePattern.test(artifact.name))
+	const filteredArtifacts = release.artifacts.filter((artifact) =>
+		artifactPattern.test(artifact.name),
+	)
 
 	if (filteredArtifacts.length === 0) {
 		consola.warn('No matching release assets found.')
@@ -207,7 +209,7 @@ export async function updateAllApplications(config: ItsonConfig) {
 				application.updates.owner,
 				application.updates.repo,
 				application.updates.destination,
-				application.updates.namePattern,
+				application.updates.artifactPattern,
 			)
 
 			for (const downloadedPath of downloadedPaths) {

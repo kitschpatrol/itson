@@ -1,7 +1,7 @@
 {
 	"name": "itson",
 	"version": "0.0.1",
-	"description": "A CLI tool to configure and manage interactive exhibit computers.",
+	"description": "A CLI tool for configuration-driven application management for long-running interactive installations.",
 	"keywords": [
 		"cli",
 		"process",

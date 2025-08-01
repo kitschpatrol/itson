@@ -24,7 +24,7 @@ await yargsInstance
 	})
 	.command(
 		['$0', 'launch'],
-		'Update, register, and start all managed applications with auto-restart enabled.',
+		'Update, register, and start all managed applications. Applications will auto-restart if they crash.',
 		() => {},
 		async ({ verbose }) => {
 			consola.info('Launching itson')
@@ -36,7 +36,7 @@ await yargsInstance
 	)
 	.command(
 		'start',
-		'Start all managed applications with auto-restart enabled.',
+		'Start all managed applications. Applications will auto-restart if they crash.',
 		() => {},
 		async ({ verbose }) => {
 			await startAllApplications(config)
@@ -44,7 +44,7 @@ await yargsInstance
 	)
 	.command(
 		'stop',
-		'Stop all managed applications',
+		'Stop all managed applications.',
 		() => {},
 		async ({ verbose }) => {
 			await stopAllApplications(config)

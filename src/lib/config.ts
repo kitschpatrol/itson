@@ -4,7 +4,7 @@
  */
 export type ItsonUpdateStrategyGitHub = {
 	destination: string
-	namePattern: RegExp
+	artifactPattern: RegExp
 	owner: string
 	repo: string
 	type: 'github'
