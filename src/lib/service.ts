@@ -1,9 +1,26 @@
 import { consola } from 'consola'
 import { execa } from 'execa'
-import { glob, unlink, writeFile } from 'node:fs/promises'
+import { glob, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type { ItsonConfigApplication } from './config'
+import { deleteFileSafe, readFileSafe } from './utilities'
+
+function getServiceLabel(appName: string) {
+	return `com.itson.${appName}`
+}
+
+async function isServiceLoaded(label: string) {
+	try {
+		const { stdout } = await execa('launchctl', ['list'])
+		return stdout.includes(label)
+	} catch (error) {
+		consola.error(
+			`Failed to check if service is loaded: ${error instanceof Error ? error.message : String(error)}`,
+		)
+		return false
+	}
+}
 
 /**
  * On macOS, register a service with launchd which will keep an application running once launched.
@@ -19,7 +36,13 @@ export async function startService(
 		throw new Error('Daemonization is currently only supported on macOS.')
 	}
 
-	const label = `com.itson.${application.name}`
+	const label = getServiceLabel(application.name)
+
+	if (await isServiceLoaded(label)) {
+		consola.info(`Service ${label} is already loaded.`)
+		return
+	}
+
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
 
 	const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -50,8 +73,14 @@ export async function startService(
 		// The command will fail if the service is not already loaded, so we ignore errors by setting reject: false.
 		await execa('launchctl', ['unload', plistPath], { reject: false })
 
-		await writeFile(plistPath, plistContent, 'utf8')
-		consola.info(`Wrote launchd service to ${plistPath}`)
+		// Only write if the file has changed
+		const existingPlistContent = await readFileSafe(plistPath)
+		if (existingPlistContent === plistContent) {
+			consola.info(`No changes to ${plistPath}`)
+		} else {
+			await writeFile(plistPath, plistContent, 'utf8')
+			consola.info(`Wrote launchd service to ${plistPath}`)
+		}
 
 		if (runOnStartup) {
 			consola.info('Loading service, start on startup')
@@ -98,7 +127,7 @@ export async function unregisterAll() {
 	for (const plistFile of plistPaths) {
 		await execa('launchctl', ['unload', plistFile])
 		consola.info(`Unloaded launchd service from ${plistFile}`)
-		await unlink(plistFile)
+		await deleteFileSafe(plistFile)
 	}
 }
 
@@ -107,10 +136,10 @@ export async function unregisterAll() {
  * @public
  */
 export async function unregisterApp(application: ItsonConfigApplication) {
-	const label = `com.itson.${application.name}`
+	const label = getServiceLabel(application.name)
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
 	await execa('launchctl', ['unload', plistPath], { reject: false })
-	await unlink(plistPath)
+	await deleteFileSafe(plistPath)
 }
 
 /**
@@ -124,7 +153,7 @@ export async function startApp(application: ItsonConfigApplication) {
  * Stop an application
  */
 export async function stopApp(application: ItsonConfigApplication) {
-	const label = `com.itson.${application.name}`
+	const label = getServiceLabel(application.name)
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
 	await execa('launchctl', ['unload', plistPath], { reject: false })
 }

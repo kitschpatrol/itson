@@ -1,6 +1,6 @@
 import { consola } from 'consola'
 import { execa } from 'execa'
-import { unlink } from 'node:fs/promises'
+import { readFile, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 /**
@@ -22,7 +22,7 @@ export async function unzip(filePath: string): Promise<string> {
 
 		await execa('unzip', ['-o', filePath, '-d', extractTo])
 		consola.success(`Unzipped ${filePath} to ${extractTo}`)
-		await unlink(filePath)
+		await deleteFileSafe(filePath)
 		return join(extractTo, topLevelItem)
 	} catch (error) {
 		consola.error(`Error unzipping file: ${error instanceof Error ? error.message : String(error)}`)
@@ -50,4 +50,38 @@ export async function getVersion(filePath: string): Promise<string | undefined> 
 		)
 		return undefined
 	}
+}
+
+/**
+ * Read a file, but return undefined if the file does not exist.
+ * @param path The path to the file.
+ * @returns The file contents, or undefined if the file does not exist.
+ */
+export async function readFileSafe(path: string): Promise<string | undefined> {
+	try {
+		return await readFile(path, 'utf8')
+	} catch (error) {
+		if (error instanceof Error && error.message.includes('ENOENT')) {
+			return undefined
+		}
+		throw error
+	}
+}
+
+/**
+ * Delete a file, but ignore errors if the file does not exist.
+ * @param path The path to the file.
+ * @returns True if the file was deleted, false if the file did not exist.
+ */
+export async function deleteFileSafe(path: string): Promise<boolean> {
+	try {
+		await unlink(path)
+	} catch (error) {
+		if (error instanceof Error && error.message.includes('ENOENT')) {
+			return false
+		}
+		throw error
+	}
+
+	return true
 }
