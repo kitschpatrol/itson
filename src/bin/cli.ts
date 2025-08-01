@@ -1,9 +1,16 @@
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { version } from '../../package.json'
+import { clearCredentials } from '../lib/commands/clear-credentials'
+import { updateAllApplications } from '../lib/commands/update'
+import { loadConfig } from 'c12'
+import { ItsonConfig } from '../lib/config'
+
+const { config } = await loadConfig<ItsonConfig>({ name: 'itson' })
 
 const yargsInstance = yargs(hideBin(process.argv))
 
+// yes
 await yargsInstance
 	.scriptName('itson')
 	.usage('$0 <command>', 'Run a itson command.')
@@ -12,13 +19,19 @@ await yargsInstance
 		type: 'boolean',
 	})
 	.command(
-		'sync',
-		'do some stuff',
+		'update',
+		'Update all managed applications to the latest version, or install them if they are not present',
 		() => {},
-		({ verbose }) => {
-			if (verbose) {
-				process.stderr.write('Do some stuff here\n')
-			}
+		async ({ verbose }) => {
+			await updateAllApplications(config)
+		},
+	)
+	.command(
+		'clear-credentials',
+		'Clear any credentials stored in the system keychain',
+		() => {},
+		async ({ verbose }) => {
+			await clearCredentials()
 		},
 	)
 	.alias('h', 'help')

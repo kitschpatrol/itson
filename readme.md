@@ -85,15 +85,14 @@ itson sync
 
 ### Similar projects
 
+- AMPM
+- pm2
+
 ## The future
 
 ## Maintainers
 
 [@kitschpatrol](https://github.com/kitschpatrol)
-
-## Acknowledgments
-
-_State anyone or anything that significantly helped with the development of your project. State public contact hyper-links if applicable._
 
 <!-- contributing -->
 
@@ -115,8 +114,13 @@ _State anyone or anything that significantly helped with the development of your
 
 ## Dev Notes
 
-Github PAT must have contents:read and metadata:read permissions.
+GitHub PAT must have contents:read and metadata:read permissions.
 
 Keytar forks:
 
 https://github.com/makeproaudio/node-keytar
+
+Launchd helpers:
+
+https://github.com/bryanmacfarlane/svcinstall (cross-platform)
+https://github.com/alex-kostirin/npm-launchctl-helper
