@@ -10,15 +10,18 @@ function getServiceLabel(appName: string) {
 	return `com.itson.${appName}`
 }
 
-async function isServiceLoaded(label: string) {
+function getGuiDomain() {
+	return `gui/${os.userInfo().uid}`
+}
+
+async function getServiceState(label: string): Promise<{ isLoaded: boolean; isRunning: boolean }> {
+	const guiDomain = getGuiDomain()
 	try {
-		const { stdout } = await execa('launchctl', ['list'])
-		return stdout.includes(label)
-	} catch (error) {
-		consola.error(
-			`Failed to check if service is loaded: ${error instanceof Error ? error.message : String(error)}`,
-		)
-		return false
+		const { stdout } = await execa('launchctl', ['print', `${guiDomain}/${label}`])
+		const isRunning = stdout.includes('pid = ')
+		return { isLoaded: true, isRunning }
+	} catch {
+		return { isLoaded: false, isRunning: false }
 	}
 }
 
@@ -39,6 +42,7 @@ export async function startService(
 	consola.info(`Starting service for ${application.name}`)
 
 	const label = getServiceLabel(application.name)
+	const guiDomain = getGuiDomain()
 
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
 
@@ -85,12 +89,15 @@ export async function startService(
 </plist>
 `
 
-	let isServiceAlreadyLoaded = false
-	if (await isServiceLoaded(label)) {
+	const { isLoaded, isRunning } = await getServiceState(label)
+
+	if (isLoaded) {
 		consola.info(`Service ${label} is already loaded.`)
-		isServiceAlreadyLoaded = true
 	} else {
 		consola.info(`Service ${label} is not loaded.`)
+	}
+	if (isRunning) {
+		consola.info(`Service ${label} is running.`)
 	}
 
 	let isPlistChanged = false
@@ -103,13 +110,9 @@ export async function startService(
 	}
 
 	try {
-		// This function should be idempotent.
-		// First, unload any existing service with the same label to ensure we're starting fresh.
-		// The command will fail if the service is not already loaded, so we ignore errors by setting reject: false.
-
-		if (isServiceAlreadyLoaded && isPlistChanged) {
-			consola.info(`Unloading service ${label}`)
-			await execa('launchctl', ['unload', plistPath], { reject: false })
+		if (isLoaded && isPlistChanged) {
+			consola.info(`Booting out service ${label} to apply changes`)
+			await execa('launchctl', ['bootout', guiDomain, plistPath], { reject: false })
 		}
 
 		if (isPlistChanged) {
@@ -117,19 +120,18 @@ export async function startService(
 			consola.info(`Wrote launchd service to ${plistPath}`)
 		}
 
-		if (!isServiceAlreadyLoaded || isPlistChanged || runOnStartup) {
-			if (runOnStartup) {
-				consola.info('Loading service, start on startup')
-				await execa('launchctl', ['load', '-w', plistPath])
-			} else {
-				consola.info('Loading service')
-				await execa('launchctl', ['load', plistPath])
-			}
+		if (!isLoaded || isPlistChanged) {
+			consola.info('Bootstrapping service')
+			await execa('launchctl', ['bootstrap', guiDomain, plistPath])
 		}
 
 		if (runNow) {
-			consola.info('Starting service now')
-			await execa('launchctl', ['start', label])
+			if (isRunning) {
+				consola.info(`Service ${label} is already running, not starting again.`)
+			} else {
+				consola.info(`Starting service ${label} now`)
+				await execa('launchctl', ['kickstart', `${guiDomain}/${label}`])
+			}
 		}
 	} catch (error) {
 		consola.error(
@@ -160,9 +162,10 @@ export async function unregisterAll() {
 	}
 
 	const plistPaths = await getAllPlistPaths()
+	const guiDomain = getGuiDomain()
 
 	for (const plistFile of plistPaths) {
-		await execa('launchctl', ['unload', plistFile])
+		await execa('launchctl', ['bootout', guiDomain, plistFile])
 		consola.info(`Unloaded launchd service from ${plistFile}`)
 		await deleteFileSafe(plistFile)
 	}
@@ -174,8 +177,9 @@ export async function unregisterAll() {
  */
 export async function unregisterApp(application: ItsonConfigApplication) {
 	const label = getServiceLabel(application.name)
+	const guiDomain = getGuiDomain()
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
-	await execa('launchctl', ['unload', plistPath], { reject: false })
+	await execa('launchctl', ['bootout', guiDomain, plistPath], { reject: false })
 	await deleteFileSafe(plistPath)
 }
 
@@ -191,8 +195,9 @@ export async function startApp(application: ItsonConfigApplication) {
  */
 export async function stopApp(application: ItsonConfigApplication) {
 	const label = getServiceLabel(application.name)
+	const guiDomain = getGuiDomain()
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
-	await execa('launchctl', ['unload', plistPath], { reject: false })
+	await execa('launchctl', ['bootout', guiDomain, plistPath], { reject: false })
 }
 
 const itsonApp: ItsonConfigApplication = {
