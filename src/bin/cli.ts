@@ -10,6 +10,7 @@ import os from 'os'
 import { stopAllApplications } from '../lib/commands/stop'
 import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
+import { execa } from 'execa'
 
 const { config, configFile, source, cwd } = await loadConfig<ItsonConfig>({
 	name: 'itson',
@@ -20,6 +21,14 @@ const { config, configFile, source, cwd } = await loadConfig<ItsonConfig>({
 const yargsInstance = yargs(hideBin(process.argv))
 
 consola.info(`Itson config file found at "${configFile}"`)
+
+async function checkInternetConnectivity() {
+	const { stdout } = await execa('ping -c 1 google.com')
+	if (stdout.includes('1 packets received')) {
+		return true
+	}
+	return false
+}
 
 // yes
 await yargsInstance
@@ -36,6 +45,16 @@ await yargsInstance
 		async ({ verbose }) => {
 			consola.info('Launching itson')
 			// Register itson if appropriate
+
+			const internetConnectivity = await checkInternetConnectivity()
+			if (internetConnectivity) {
+				consola.error(
+					'No internet connectivity detected. Please check your network connection and try again.',
+				)
+			} else {
+				console.log('Internet connectivity detected. Continuing...')
+			}
+
 			await register(config)
 			await updateAllApplications(config)
 			await startAllApplications(config)

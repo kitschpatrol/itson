@@ -79,7 +79,15 @@ export async function getLatestRelease(
 		return
 	}
 
-	const octokit = new Octokit({ auth: pat })
+	const octokit = new Octokit({
+		auth: pat,
+		request: {
+			timeout: 3800,
+		},
+		retry: {
+			doNotRetry: [429],
+		},
+	})
 
 	try {
 		const { data: latestRelease } = await octokit.repos.getLatestRelease({
