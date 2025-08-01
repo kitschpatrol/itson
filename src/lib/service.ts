@@ -73,8 +73,19 @@ export async function startService(
 	}
 }
 
+async function getAllPlistPaths(): Promise<string[]> {
+	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.itson.*.plist')
+	const plistFiles = glob(plistPath)
+
+	const plistPaths: string[] = []
+	for await (const plistFile of plistFiles) {
+		plistPaths.push(plistFile)
+	}
+	return plistPaths
+}
+
 /**
- * Unregister all services with the label `com.itson.*`.
+ * Stop and unregister all services with the label `com.itson.*`.
  * @public
  */
 export async function unregisterAll() {
@@ -82,10 +93,9 @@ export async function unregisterAll() {
 		throw new Error('Daemonization is currently only supported on macOS.')
 	}
 
-	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.itson.*.plist')
-	const plistFiles = glob(plistPath)
+	const plistPaths = await getAllPlistPaths()
 
-	for await (const plistFile of plistFiles) {
+	for (const plistFile of plistPaths) {
 		await execa('launchctl', ['unload', plistFile])
 		consola.info(`Unloaded launchd service from ${plistFile}`)
 		await unlink(plistFile)
@@ -94,6 +104,7 @@ export async function unregisterAll() {
 
 /**
  * Unregister an application
+ * @public
  */
 export async function unregisterApp(application: ItsonConfigApplication) {
 	const label = `com.itson.${application.name}`
@@ -101,18 +112,6 @@ export async function unregisterApp(application: ItsonConfigApplication) {
 	await execa('launchctl', ['unload', plistPath], { reject: false })
 	await unlink(plistPath)
 }
-
-// await startApp({
-// 	command: '/Applications/AllWork.app/Contents/MacOS/AllWork',
-// 	name: 'AllWork',
-// 	updates: {
-// 		destination: '/Applications/AllWork.app',
-// 		namePattern: /^AllWork.+\.zip$/,
-// 		owner: 'kitschpatrol',
-// 		repo: 'allwork',
-// 		type: 'github',
-// 	},
-// })
 
 /**
  * Start an application now, and keep it running. Does not run itself directly at startup, but will be by itson after updates if itson is registered to start on startup.
@@ -131,7 +130,7 @@ export async function stopApp(application: ItsonConfigApplication) {
 }
 
 const itsonApp: ItsonConfigApplication = {
-	command: '/Users/mika/Code/itson/dist/bin/cli.js start',
+	command: '/Users/mika/Code/itson/dist/bin/cli.js',
 	name: 'Itson',
 }
 
@@ -151,9 +150,8 @@ export async function unregisterItson() {
 
 /**
  * Run itson now. (Testing only...)
+ * @public
  */
 export async function runItson() {
 	await startService(itsonApp, true, true, false)
 }
-
-// await unregisterAll()

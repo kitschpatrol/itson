@@ -1,11 +1,9 @@
-import { consola } from 'consola/basic'
+import { consola } from 'consola'
 import keytar from 'keytar-forked'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
+import { unregisterAll } from '../service'
 
-/**
- * Clear all credentials from the system keychain
- */
-export async function clearCredentials() {
+async function clearCredentials() {
 	consola.info('Clearing credentials...')
 	const credentials = await keytar.findCredentials(KEYCHAIN_SERVICE)
 
@@ -22,4 +20,13 @@ export async function clearCredentials() {
 	}
 
 	consola.success('Credentials cleared')
+}
+
+/**
+ * Clear any credentials stored in the system keychain, and remove any registered services
+ */
+export async function reset() {
+	consola.info('Resetting itson')
+	await unregisterAll()
+	await clearCredentials()
 }
