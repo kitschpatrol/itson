@@ -36,14 +36,14 @@ export async function startService(
 		throw new Error('Daemonization is currently only supported on macOS.')
 	}
 
+	consola.info(`Starting service for ${application.name}`)
+
 	const label = getServiceLabel(application.name)
 
-	if (await isServiceLoaded(label)) {
-		consola.info(`Service ${label} is already loaded.`)
-		return
-	}
-
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
+
+	// Use the invoking user's PATH to ensure the service can find node and such...
+	const { stdout: userPath } = await execa('echo $PATH', { shell: true })
 
 	const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -55,10 +55,28 @@ export async function startService(
     <array>
       <string>${application.command}</string>
     </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>${userPath}</string>
+      <key>NODE_ENV</key>
+      <string>production</string>
+    </dict>		
     <key>RunAtLoad</key>
     ${runOnStartup ? '<true/>' : '<false/>'}
     <key>KeepAlive</key>
-    ${keepAlive ? '<true/>' : '<false/>'}
+    ${
+			keepAlive
+				? `<dict>
+      <key>SuccessfulExit</key>
+      <true/>
+      <key>Crashed</key>
+      <true/>			
+      <key>AfterInitialDemand</key>
+      <true/>
+    </dict>`
+				: '<false/>'
+		}		
     <key>StandardOutPath</key>
     <string>/tmp/${label}.out.log</string>
     <key>StandardErrorPath</key>
@@ -67,27 +85,46 @@ export async function startService(
 </plist>
 `
 
+	let isServiceAlreadyLoaded = false
+	if (await isServiceLoaded(label)) {
+		consola.info(`Service ${label} is already loaded.`)
+		isServiceAlreadyLoaded = true
+	} else {
+		consola.info(`Service ${label} is not loaded.`)
+	}
+
+	let isPlistChanged = false
+	const existingPlistContent = await readFileSafe(plistPath)
+	if (existingPlistContent === plistContent) {
+		consola.info(`No changes to ${plistPath}`)
+	} else {
+		consola.info(`Plist for ${label} has changed`)
+		isPlistChanged = true
+	}
+
 	try {
 		// This function should be idempotent.
 		// First, unload any existing service with the same label to ensure we're starting fresh.
 		// The command will fail if the service is not already loaded, so we ignore errors by setting reject: false.
-		await execa('launchctl', ['unload', plistPath], { reject: false })
 
-		// Only write if the file has changed
-		const existingPlistContent = await readFileSafe(plistPath)
-		if (existingPlistContent === plistContent) {
-			consola.info(`No changes to ${plistPath}`)
-		} else {
+		if (isServiceAlreadyLoaded && isPlistChanged) {
+			consola.info(`Unloading service ${label}`)
+			await execa('launchctl', ['unload', plistPath], { reject: false })
+		}
+
+		if (isPlistChanged) {
 			await writeFile(plistPath, plistContent, 'utf8')
 			consola.info(`Wrote launchd service to ${plistPath}`)
 		}
 
-		if (runOnStartup) {
-			consola.info('Loading service, start on startup')
-			await execa('launchctl', ['load', '-w', plistPath])
-		} else {
-			consola.info('Loading service')
-			await execa('launchctl', ['load', plistPath])
+		if (!isServiceAlreadyLoaded || isPlistChanged || runOnStartup) {
+			if (runOnStartup) {
+				consola.info('Loading service, start on startup')
+				await execa('launchctl', ['load', '-w', plistPath])
+			} else {
+				consola.info('Loading service')
+				await execa('launchctl', ['load', plistPath])
+			}
 		}
 
 		if (runNow) {

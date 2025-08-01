@@ -20,6 +20,8 @@ const GITHUB_PAT_ACCOUNT = 'github-pat'
 async function getGitHubPat(): Promise<string | undefined> {
 	let pat = await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)
 
+	console.log('pat', pat)
+
 	if (!pat) {
 		consola.start('GitHub Personal Access Token not found')
 

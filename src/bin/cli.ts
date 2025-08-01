@@ -6,13 +6,20 @@ import { updateAllApplications } from '../lib/commands/update'
 import { loadConfig } from 'c12'
 import { ItsonConfig } from '../lib/config'
 import { startAllApplications } from '../lib/commands/start'
+import os from 'os'
 import { stopAllApplications } from '../lib/commands/stop'
 import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
 
-const { config } = await loadConfig<ItsonConfig>({ name: 'itson' })
+const { config, configFile, source, cwd } = await loadConfig<ItsonConfig>({
+	name: 'itson',
+	cwd: os.homedir(), // rcfile search in home dir doesn't seem to work...
+	globalRc: true,
+})
 
 const yargsInstance = yargs(hideBin(process.argv))
+
+consola.info(`Itson config file found at "${configFile}"`)
 
 // yes
 await yargsInstance

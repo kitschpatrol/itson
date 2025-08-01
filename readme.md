@@ -136,3 +136,7 @@ Launchd helpers:
 
 <https://github.com/bryanmacfarlane/svcinstall> (cross-platform)
 <https://github.com/alex-kostirin/npm-launchctl-helper>
+
+https://launchd.info/
+
+/Users/mika/Library/LaunchAgents
