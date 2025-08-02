@@ -1,7 +1,7 @@
 {
 	"name": "itson",
 	"version": "0.0.1",
-	"description": "A CLI tool for configuration-driven application management for long-running interactive installations.",
+	"description": "A CLI tool for configuration-driven management of long-running interactive installation applications.",
 	"keywords": [
 		"cli",
 		"process",

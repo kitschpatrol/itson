@@ -5,7 +5,7 @@ export default itsonConfig({
 		{
 			command: '/Applications/AllWork.app/Contents/MacOS/AllWork',
 			name: 'AllWork',
-			updates: {
+			update: {
 				artifactPattern: /^AllWork.+\.zip$/,
 				destination: '/Applications/AllWork.app',
 				owner: 'kitschpatrol',

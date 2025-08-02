@@ -20,8 +20,6 @@ const GITHUB_PAT_ACCOUNT = 'github-pat'
 async function getGitHubPat(): Promise<string | undefined> {
 	let pat = await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)
 
-	console.log('pat', pat)
-
 	if (!pat) {
 		consola.start('GitHub Personal Access Token not found')
 
@@ -82,10 +80,11 @@ export async function getLatestRelease(
 	const octokit = new Octokit({
 		auth: pat,
 		request: {
-			timeout: 3800,
+			timeout: 5000,
 		},
 		retry: {
 			doNotRetry: [429],
+			retries: 5,
 		},
 	})
 
@@ -214,12 +213,12 @@ export async function updateApplicationFromGitHubRelease(
  */
 export async function updateAllApplications(config: ItsonConfig) {
 	for (const application of config.applications) {
-		if (application.updates !== undefined) {
+		if (application.update !== undefined) {
 			const downloadedPaths = await updateApplicationFromGitHubRelease(
-				application.updates.owner,
-				application.updates.repo,
-				application.updates.destination,
-				application.updates.artifactPattern,
+				application.update.owner,
+				application.update.repo,
+				application.update.destination,
+				application.update.artifactPattern,
 			)
 
 			for (const downloadedPath of downloadedPaths) {

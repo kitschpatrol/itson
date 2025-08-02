@@ -3,8 +3,8 @@
  * @public
  */
 export type ItsonUpdateStrategyGitHub = {
-	destination: string
 	artifactPattern: RegExp
+	destination: string
 	owner: string
 	repo: string
 	type: 'github'
@@ -16,7 +16,7 @@ export type ItsonUpdateStrategyGitHub = {
 export type ItsonConfigApplication = {
 	command: string
 	name: string
-	updates?: ItsonUpdateStrategyGitHub
+	update?: ItsonUpdateStrategyGitHub
 }
 
 /**

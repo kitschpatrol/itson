@@ -85,3 +85,21 @@ export async function deleteFileSafe(path: string): Promise<boolean> {
 
 	return true
 }
+
+/**
+ * Check if the internet is reachable and DNS is working.
+ * @returns True if the internet is reachable, false otherwise.
+ * @public
+ */
+export async function checkInternetConnectivity() {
+	const { stderr, stdout } = await execa('ping', ['-c', '1', 'google.com'])
+	if (stdout.includes('1 packets received')) {
+		return true
+	}
+	consola.error(
+		'No internet connectivity detected. Please check your network connection and try again.',
+	)
+	consola.error(stdout)
+	consola.error(stderr)
+	return false
+}

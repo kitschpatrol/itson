@@ -17,15 +17,30 @@
 
 ## Overview
 
+- AMPM
+- pm2
+
 Native implementations are used wherever possible (e.g. launchd for process management, the system keychain for credential storage.)
 
 ## Getting started
 
 ### Dependencies
 
+Itson is architected with future cross-platform support in mind, but currently only provides implementations for macOS.
+
+Itson requires Node 22.12.0+.
+
 ### Installation
 
+```sh
+npm install --global itson
+```
+
 ## Usage
+
+Invoke `itson` to update the system to reflect your configuration, check for and install any application updates, and then immediately launch any specified applications.
+
+This command runs automatically at system startup when `runOnStartup: true` in your configuration.
 
 ### Configuration
 
@@ -37,7 +52,7 @@ export default {
     {
       command: '/Applications/AllWork.app/Contents/MacOS/AllWork',
       name: 'AllWork',
-      updates: {
+      update: {
         artifactPattern: /^AllWork.+\.zip$/,
         destination: '/Applications/AllWork.app',
         owner: 'kitschpatrol',
@@ -53,6 +68,12 @@ export default {
   runOnStartup: true,
 }
 ```
+
+An optional `update` strategy may be specified.
+
+Currently, only updates from GitHub releases with attached binary artifacts are supported.
+
+Private GitHub repositories are supported via personal access tokens bearing at least the `contents:read` and `metadata:read` permissions.
 
 ### Commands
 
@@ -72,9 +93,9 @@ itson [command]
 
 | Command    | Description                                                                                                               |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `launch`   | Update, register, and start all managed applications with auto-restart enabled. _(Default command.)_                      |
-| `start`    | Start all managed applications with auto-restart enabled.                                                                 |
-| `stop`     | Stop all managed applications                                                                                             |
+| `launch`   | Update, register, and start all managed applications. Applications will auto-restart if they crash. _(Default command.)_  |
+| `start`    | Start all managed applications. Applications will auto-restart if they crash.                                             |
+| `stop`     | Stop all managed applications.                                                                                            |
 | `update`   | Update all managed applications to the latest available versions.                                                         |
 | `register` | Register itson with the system according to the config file. Optionally run this after changing state in the config file. |
 | `reset`    | Clear any credentials stored in the system keychain, and remove any registered services.                                  |
@@ -86,21 +107,6 @@ itson [command]
 | `--version`<br>`-v` | Show version number      | `boolean` |
 
 <!-- /cli-help -->
-
-### Examples
-
-## Background
-
-### Motivation
-
-### Implementation notes
-
-### Similar projects
-
-- AMPM
-- pm2
-
-## The future
 
 ## Maintainers
 
@@ -126,17 +132,17 @@ itson [command]
 
 ## Dev Notes
 
-GitHub PAT must have contents:read and metadata:read permissions.
+Should probably rewrite this in Go.
 
-Keytar forks:
+### Keychain
 
-<https://github.com/makeproaudio/node-keytar>
+- [keytar-forked](https://github.com/shiftkey/node-keytar)
+- [node-keytar](https://github.com/makeproaudio/node-keytar)
 
-Launchd helpers:
+### Launchd
 
-<https://github.com/bryanmacfarlane/svcinstall> (cross-platform)
-<https://github.com/alex-kostirin/npm-launchctl-helper>
-
-https://launchd.info/
-
-/Users/mika/Library/LaunchAgents
+- [svcinstall](https://github.com/bryanmacfarlane/svcinstall) (cross-platform)
+- [npm-launchctl-helper](https://github.com/alex-kostirin/npm-launchctl-helper)
+- [launchd.info](https://launchd.info/)
+- Agents: `~/Users/mika~/Library/LaunchAgents/`
+- Logs: `/tmp/`

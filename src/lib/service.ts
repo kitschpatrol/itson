@@ -112,7 +112,7 @@ export async function startService(
 	try {
 		if (isLoaded && isPlistChanged) {
 			consola.info(`Booting out service ${label} to apply changes`)
-			await execa('launchctl', ['bootout', guiDomain, plistPath], { reject: false })
+			await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 		}
 
 		if (isPlistChanged) {
@@ -165,7 +165,8 @@ export async function unregisterAll() {
 	const guiDomain = getGuiDomain()
 
 	for (const plistFile of plistPaths) {
-		await execa('launchctl', ['bootout', guiDomain, plistFile])
+		const label = path.basename(plistFile, '.plist')
+		await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 		consola.info(`Unloaded launchd service from ${plistFile}`)
 		await deleteFileSafe(plistFile)
 	}
@@ -179,7 +180,7 @@ export async function unregisterApp(application: ItsonConfigApplication) {
 	const label = getServiceLabel(application.name)
 	const guiDomain = getGuiDomain()
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
-	await execa('launchctl', ['bootout', guiDomain, plistPath], { reject: false })
+	await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 	await deleteFileSafe(plistPath)
 }
 
@@ -196,8 +197,7 @@ export async function startApp(application: ItsonConfigApplication) {
 export async function stopApp(application: ItsonConfigApplication) {
 	const label = getServiceLabel(application.name)
 	const guiDomain = getGuiDomain()
-	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
-	await execa('launchctl', ['bootout', guiDomain, plistPath], { reject: false })
+	await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 }
 
 const itsonApp: ItsonConfigApplication = {
