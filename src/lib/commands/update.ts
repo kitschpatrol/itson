@@ -1,7 +1,8 @@
 // @case-police-ignore Api
-
 import { Octokit } from '@octokit/rest'
 import { consola } from 'consola'
+import { execa } from 'execa'
+import findVersions from 'find-versions'
 import keytar from 'keytar-forked'
 import { createWriteStream } from 'node:fs'
 import { mkdir, rename, rm, stat } from 'node:fs/promises'
@@ -105,6 +106,55 @@ export async function getLatestRelease(
 	} catch (error) {
 		consola.error(
 			`Error fetching latest release for ${owner}/${repo}: ${error instanceof Error ? error.message : String(error)}`,
+		)
+	}
+}
+
+async function getVersionFromCLI(cli: string): Promise<string | undefined> {
+	try {
+		const { stdout } = await execa(cli, ['--version'], { reject: false })
+		return findVersions(stdout).at(0)
+	} catch (error) {
+		consola.error(
+			`Error getting version from ${cli}: ${error instanceof Error ? error.message : String(error)}`,
+		)
+		return undefined
+	}
+}
+
+async function updateApplicationFromGitHubPythonRelease(
+	owner: string,
+	repo: string,
+	cli: string,
+): Promise<void> {
+	const localVersion = await getVersionFromCLI(cli)
+	const release = await getLatestRelease(owner, repo)
+
+	if (!release) {
+		return
+	}
+
+	if (localVersion && !semver.gt(release.version, localVersion)) {
+		consola.info('Application is already up to date.')
+		return
+	}
+
+	consola.info('Installing latest release version:', release.version)
+	const pat = await getGitHubPat()
+	if (!pat) {
+		return
+	}
+
+	try {
+		const { stdout } = await execa('uv', [
+			'tool',
+			'install',
+			`git+https://${pat}@github.com/${owner}/${repo}@v${release.version}`,
+		])
+		console.info(stdout)
+	} catch (error) {
+		consola.error(
+			`Error installing ${owner}/${repo}@v${release.version}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 	}
 }
@@ -214,23 +264,33 @@ export async function updateApplicationFromGitHubRelease(
 export async function updateAllApplications(config: ItsupConfig) {
 	for (const application of config.applications) {
 		if (application.update !== undefined) {
-			const downloadedPaths = await updateApplicationFromGitHubRelease(
-				application.update.owner,
-				application.update.repo,
-				application.update.destination,
-				application.update.artifactPattern,
-			)
+			if (application.update.type === 'github') {
+				const downloadedPaths = await updateApplicationFromGitHubRelease(
+					application.update.owner,
+					application.update.repo,
+					application.update.destination,
+					application.update.artifactPattern,
+				)
 
-			for (const downloadedPath of downloadedPaths) {
-				if (downloadedPath) {
-					const version = await getVersion(downloadedPath)
+				for (const downloadedPath of downloadedPaths) {
 					// eslint-disable-next-line max-depth
-					if (version) {
-						consola.success(`Version of ${basename(downloadedPath)}: ${version}`)
+					if (downloadedPath) {
+						const version = await getVersion(downloadedPath)
+						// eslint-disable-next-line max-depth
+						if (version) {
+							consola.success(`Version of ${basename(downloadedPath)}: ${version}`)
+						}
+					} else {
+						consola.error(`No downloaded path for ${application.name}`)
 					}
-				} else {
-					consola.error(`No downloaded path for ${application.name}`)
 				}
+				// eslint-disable-next-line ts/no-unnecessary-condition
+			} else if (application.update.type === 'github-python') {
+				await updateApplicationFromGitHubPythonRelease(
+					application.update.owner,
+					application.update.repo,
+					application.update.cli,
+				)
 			}
 		}
 	}

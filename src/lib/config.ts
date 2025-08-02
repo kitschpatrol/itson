@@ -1,5 +1,9 @@
+// TODO more strategies
+// TODO separate update strategy from application
+// TODO just use brew?
+
 /**
- * TODO more strategies
+ *
  * @public
  */
 export type ItsupUpdateStrategyGitHub = {
@@ -11,12 +15,24 @@ export type ItsupUpdateStrategyGitHub = {
 }
 
 /**
+ *
+ * @public
+ */
+export type ItsupUpdateStrategyGitHubPython = {
+	cli: string
+	owner: string
+	repo: string
+	type: 'github-python'
+}
+
+/**
  * @public
  */
 export type ItsupConfigApplication = {
+	arguments?: string[]
 	command: string
 	name: string
-	update?: ItsupUpdateStrategyGitHub
+	update?: ItsupUpdateStrategyGitHub | ItsupUpdateStrategyGitHubPython
 }
 
 /**

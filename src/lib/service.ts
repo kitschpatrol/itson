@@ -57,7 +57,9 @@ export async function startService(
     <string>${label}</string>
     <key>ProgramArguments</key>
     <array>
+			<string>/usr/bin/env</string>
       <string>${application.command}</string>
+      ${application.arguments?.map((arg) => `<string>${arg}</string>`).join('\n')}
     </array>
     <key>EnvironmentVariables</key>
     <dict>

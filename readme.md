@@ -30,6 +30,8 @@ Itsup is architected with future cross-platform support in mind, but currently o
 
 Itsup requires Node 22.12.0+.
 
+Installing python application packages requires [uv](https://docs.astral.sh/uv/).
+
 ### Installation
 
 ```sh
