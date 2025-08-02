@@ -3,11 +3,11 @@ import { execa } from 'execa'
 import { glob, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import type { ItsonConfigApplication } from './config'
+import type { ItsupConfigApplication } from './config'
 import { deleteFileSafe, readFileSafe } from './utilities'
 
 function getServiceLabel(appName: string) {
-	return `com.itson.${appName}`
+	return `com.itsup.${appName}`
 }
 
 function getGuiDomain() {
@@ -30,7 +30,7 @@ async function getServiceState(label: string): Promise<{ isLoaded: boolean; isRu
  * @public
  */
 export async function startService(
-	application: ItsonConfigApplication,
+	application: ItsupConfigApplication,
 	runOnStartup = false,
 	runNow = false,
 	keepAlive = true,
@@ -142,7 +142,7 @@ export async function startService(
 }
 
 async function getAllPlistPaths(): Promise<string[]> {
-	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.itson.*.plist')
+	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.itsup.*.plist')
 	const plistFiles = glob(plistPath)
 
 	const plistPaths: string[] = []
@@ -153,7 +153,7 @@ async function getAllPlistPaths(): Promise<string[]> {
 }
 
 /**
- * Stop and unregister all services with the label `com.itson.*`.
+ * Stop and unregister all services with the label `com.itsup.*`.
  * @public
  */
 export async function unregisterAll() {
@@ -176,7 +176,7 @@ export async function unregisterAll() {
  * Unregister an application
  * @public
  */
-export async function unregisterApp(application: ItsonConfigApplication) {
+export async function unregisterApp(application: ItsupConfigApplication) {
 	const label = getServiceLabel(application.name)
 	const guiDomain = getGuiDomain()
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
@@ -185,44 +185,44 @@ export async function unregisterApp(application: ItsonConfigApplication) {
 }
 
 /**
- * Start an application now, and keep it running. Does not run itself directly at startup, but will be by itson after updates if itson is registered to start on startup.
+ * Start an application now, and keep it running. Does not run itself directly at startup, but will be by itsup after updates if itsup is registered to start on startup.
  */
-export async function startApp(application: ItsonConfigApplication) {
+export async function startApp(application: ItsupConfigApplication) {
 	await startService(application, false, true, true)
 }
 
 /**
  * Stop an application
  */
-export async function stopApp(application: ItsonConfigApplication) {
+export async function stopApp(application: ItsupConfigApplication) {
 	const label = getServiceLabel(application.name)
 	const guiDomain = getGuiDomain()
 	await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 }
 
-const itsonApp: ItsonConfigApplication = {
-	command: '/Users/mika/Code/itson/dist/bin/cli.js',
-	name: 'Itson',
+const itsupApp: ItsupConfigApplication = {
+	command: '/Users/mika/Code/itsup/dist/bin/cli.js',
+	name: 'Itsup',
 }
 
 /**
- * Register itson to run on startup.
+ * Register itsup to run on startup.
  */
-export async function registerItson() {
-	await startService(itsonApp, true, false, false)
+export async function registerItsup() {
+	await startService(itsupApp, true, false, false)
 }
 
 /**
- * Unregister itson
+ * Unregister itsup
  */
-export async function unregisterItson() {
-	await unregisterApp(itsonApp)
+export async function unregisterItsup() {
+	await unregisterApp(itsupApp)
 }
 
 /**
- * Run itson now. (Testing only...)
+ * Run itsup now. (Testing only...)
  * @public
  */
-export async function runItson() {
-	await startService(itsonApp, true, true, false)
+export async function runItsup() {
+	await startService(itsupApp, true, true, false)
 }

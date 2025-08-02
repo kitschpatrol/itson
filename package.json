@@ -1,5 +1,5 @@
 {
-	"name": "itson",
+	"name": "itsup",
 	"version": "0.0.1",
 	"description": "A CLI tool for configuration-driven management of long-running interactive installation applications.",
 	"keywords": [
@@ -8,11 +8,11 @@
 		"manager",
 		"updater"
 	],
-	"homepage": "https://github.com/kitschpatrol/itson",
-	"bugs": "https://github.com/kitschpatrol/itson/issues",
+	"homepage": "https://github.com/kitschpatrol/itsup",
+	"bugs": "https://github.com/kitschpatrol/itsup/issues",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/kitschpatrol/itson.git"
+		"url": "git+https://github.com/kitschpatrol/itsup.git"
 	},
 	"license": "MIT",
 	"author": {
@@ -22,7 +22,7 @@
 	},
 	"type": "module",
 	"bin": {
-		"itson": "dist/bin/cli.js"
+		"itsup": "dist/bin/cli.js"
 	},
 	"scripts": {
 		"build": "pkgroll --clean-dist --minify --tsconfig tsconfig.build.json",

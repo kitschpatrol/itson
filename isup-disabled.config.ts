@@ -1,6 +1,6 @@
-import { itsonConfig } from './src/lib/config'
+import { itsupConfig } from './src/lib/config'
 
-export default itsonConfig({
+export default itsupConfig({
 	applications: [
 		{
 			command: '/Applications/AllWork.app/Contents/MacOS/AllWork',

@@ -2,7 +2,7 @@
  * TODO more strategies
  * @public
  */
-export type ItsonUpdateStrategyGitHub = {
+export type ItsupUpdateStrategyGitHub = {
 	artifactPattern: RegExp
 	destination: string
 	owner: string
@@ -13,25 +13,25 @@ export type ItsonUpdateStrategyGitHub = {
 /**
  * @public
  */
-export type ItsonConfigApplication = {
+export type ItsupConfigApplication = {
 	command: string
 	name: string
-	update?: ItsonUpdateStrategyGitHub
+	update?: ItsupUpdateStrategyGitHub
 }
 
 /**
  * @public
  */
-export type ItsonConfig = {
-	applications: ItsonConfigApplication[]
+export type ItsupConfig = {
+	applications: ItsupConfigApplication[]
 	// TODO more stuff
 	runOnStartup: boolean
 }
 
 /**
- * Itson configuration factory function for type safety.
+ * Itsup configuration factory function for type safety.
  * @public
  */
-export function itsonConfig(config: ItsonConfig): ItsonConfig {
+export function itsupConfig(config: ItsupConfig): ItsupConfig {
 	return config
 }
