@@ -203,7 +203,8 @@ export async function stopApp(application: ItsonConfigApplication) {
 }
 
 const itsonApp: ItsonConfigApplication = {
-	command: '/Users/mika/Code/itson/dist/bin/cli.js',
+	arguments: [],
+	command: 'itson',
 	name: 'Itson',
 }
 
