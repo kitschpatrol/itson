@@ -11,16 +11,31 @@
 
 <!-- short-description -->
 
-**A CLI tool for configuration-driven application management for long-running interactive installations.**
+**A CLI tool for configuration-driven management of long-running interactive applications.**
 
 <!-- /short-description -->
 
+> [!WARNING]
+>
+> Itsup is under development. It should not be considered suitable for general use until a 1.0 release.
+
 ## Overview
 
-- AMPM
-- pm2
+Itsup helps you install, update, and run your bespoke privately-distributed applications in the context of long-running interactive installations or exhibits.
 
-Native implementations are used wherever possible (e.g. launchd for process management, the system keychain for credential storage.)
+Itsup does the following each time it runs:
+
+1. **Read** a configuration file and **register** any new configuration settings with the operating system. \
+   _For now, this amounts to scheduling itsup's own launch on future startups._
+
+2. **Check** for available updates to exhibit applications, prompting for credentials if necessary. \
+   _For now, this is limited to checking for new releases on GitHub, and follows [semver](https://semver.org/) rules._
+
+3. **Download** and **install** updates if available. \
+   _For now, this means standalone pre-built `.exe` binaries or `.app` bundles provided as assets attached to GitHub releases, or `uv tool`-installable Python application packages hosted in GitHub repositories._
+
+4. **Start** exhibit application(s) using the system-level services framework, and keep them running if they're closed or crash. \
+   _For now, this leverages `launchd` on macOS._
 
 ## Getting started
 
@@ -28,9 +43,9 @@ Native implementations are used wherever possible (e.g. launchd for process mana
 
 Itsup is architected with future cross-platform support in mind, but currently only provides implementations for macOS.
 
-Itsup requires Node 22.12.0+.
+Itsup requires [Node](https://nodejs.org/) 22.12.0+.
 
-Installing python application packages requires [uv](https://docs.astral.sh/uv/).
+Installing Python application packages requires [uv](https://docs.astral.sh/uv/).
 
 ### Installation
 
@@ -40,7 +55,7 @@ npm install --global itsup
 
 ## Usage
 
-Invoke `itsup` to update the system to reflect your configuration, check for and install any application updates, and then immediately launch any specified applications.
+Create a configuration file as described below, and then invoke `itsup` to update the system to reflect your configuration, check for and install any application updates, and then immediately launch any specified applications.
 
 This command runs automatically at system startup when `runOnStartup: true` in your configuration.
 
@@ -73,7 +88,7 @@ export default {
 
 An optional `update` strategy may be specified.
 
-Currently, only updates from GitHub releases with attached binary artifacts are supported.
+Currently, only updates from GitHub releases containing Python application packages or attached binary artifacts are supported.
 
 Private GitHub repositories are supported via personal access tokens bearing at least the `contents:read` and `metadata:read` permissions.
 
@@ -83,7 +98,7 @@ Private GitHub repositories are supported via personal access tokens bearing at 
 
 #### Command: `itsup`
 
-Run an itsup command. Defaults to `launch` if a command is not provided.
+Run an itsup command.
 
 If no command is provided, `itsup launch` is run by default.
 
@@ -110,6 +125,56 @@ itsup [command]
 
 <!-- /cli-help -->
 
+## Background
+
+### Alternatives
+
+#### Monitoring / scheduling
+
+- [AMPM](https://github.com/stimulant/ampm)
+- [PM2](https://pm2.keymetrics.io/)
+
+#### Updates / deployment
+
+Update functionality can be baked into applications (e.g. [Squirrel](https://github.com/Squirrel), [Sparkle](https://sparkle-project.org/), [Electron autoUpdater](https://www.electronjs.org/docs/latest/api/auto-updater), etc.), but these are geared toward end-user applications and generally display their prompts interactively — unworkable for an "always up" interactive exhibit application.
+
+[Homebrew](https://brew.sh) or [Scoop](https://scoop.sh/) implement robust and readily-scriptable package management solutions, but none are (practically) cross-platform. Securing and managing private registries for one-off applications is a bit of a pain.
+
+[Docker](https://www.docker.com/) and other containerization strategies can be appealing on the back-end. For highly interactive real-time graphical applications, containerization creates extra hoops to jump through to access specialized low-level hardware, GPUs, and audio devices.
+
+### Scope
+
+Itsup is responsible for the following:
+
+- Updating exhibit application software non-interactively
+- Securely storing credentials required for updates
+- Ensuring that exhibit application software restarts automatically in the event of a crash
+
+Itsup is currently **not** concerned with the following:
+
+- Logging / analytics / observability
+- Scheduling
+- Automatic rollback
+
+### Development notes
+
+Itsup itself is not a long-running process. It runs once at startup, and then hands over responsibility for application monitoring to the operating system's native service-management facilities.
+
+Native implementations are used wherever possible (e.g. launchd for process management, the system keychain for credential storage.)
+
+#### Launchd
+
+- [svcinstall](https://github.com/bryanmacfarlane/svcinstall) (cross-platform)
+- [npm-launchctl-helper](https://github.com/alex-kostirin/npm-launchctl-helper)
+- [launchd.info](https://launchd.info/)
+- Agents: `~/Library/LaunchAgents/`
+- Logs: `/tmp/`
+
+#### Keychain
+
+- [keytar-forked](https://github.com/shiftkey/node-keytar)
+- [node-keytar](https://github.com/makeproaudio/node-keytar)
+
 ## Maintainers
 
 [@kitschpatrol](https://github.com/kitschpatrol)
@@ -129,22 +194,3 @@ itsup [command]
 [MIT](license.txt) © Eric Mika
 
 <!-- /license -->
-
----
-
-## Dev Notes
-
-Should probably rewrite this in Go.
-
-### Keychain
-
-- [keytar-forked](https://github.com/shiftkey/node-keytar)
-- [node-keytar](https://github.com/makeproaudio/node-keytar)
-
-### Launchd
-
-- [svcinstall](https://github.com/bryanmacfarlane/svcinstall) (cross-platform)
-- [npm-launchctl-helper](https://github.com/alex-kostirin/npm-launchctl-helper)
-- [launchd.info](https://launchd.info/)
-- Agents: `~/Users/mika~/Library/LaunchAgents/`
-- Logs: `/tmp/`

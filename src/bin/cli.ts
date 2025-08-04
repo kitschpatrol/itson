@@ -23,7 +23,7 @@ const yargsInstance = yargs(hideBin(process.argv))
 // yes
 await yargsInstance
 	.scriptName('itsup')
-	.usage('$0 [command]', 'Run an itsup command. Defaults to `launch` if a command is not provided.')
+	.usage('$0 [command]', 'Run an itsup command.')
 	.option('verbose', {
 		description: 'Run with verbose logging',
 		type: 'boolean',

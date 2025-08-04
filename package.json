@@ -1,7 +1,7 @@
 {
 	"name": "itsup",
 	"version": "0.0.1",
-	"description": "A CLI tool for configuration-driven management of long-running interactive installation applications.",
+	"description": "A CLI tool for configuration-driven management of long-running interactive applications.",
 	"keywords": [
 		"cli",
 		"process",
