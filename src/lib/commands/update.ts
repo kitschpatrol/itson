@@ -135,7 +135,7 @@ async function updateApplicationFromGitHubPythonRelease(
 	}
 
 	if (localVersion && !semver.gt(release.version, localVersion)) {
-		consola.info('Application is already up to date.')
+		consola.info(`${cli} is already up to date with version ${localVersion}.`)
 		return
 	}
 
@@ -224,7 +224,7 @@ export async function updateApplicationFromGitHubRelease(
 	}
 
 	if (localVersion && !semver.gt(release.version, localVersion)) {
-		consola.info('Application is already up to date.')
+		consola.info(`${destination} is already up to date with version ${localVersion}.`)
 		return downloadedPaths
 	}
 
@@ -289,7 +289,7 @@ export async function updateAllApplications(config: ItsonConfig) {
 				await updateApplicationFromGitHubPythonRelease(
 					application.update.owner,
 					application.update.repo,
-					application.update.cli,
+					application.command,
 				)
 			}
 		}

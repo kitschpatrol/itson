@@ -19,7 +19,6 @@ export type ItsonUpdateStrategyGitHub = {
  * @public
  */
 export type ItsonUpdateStrategyGitHubPython = {
-	cli: string
 	owner: string
 	repo: string
 	type: 'github-python'
