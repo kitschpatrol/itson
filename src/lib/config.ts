@@ -6,7 +6,7 @@
  *
  * @public
  */
-export type ItsupUpdateStrategyGitHub = {
+export type ItsonUpdateStrategyGitHub = {
 	artifactPattern: RegExp
 	destination: string
 	owner: string
@@ -18,7 +18,7 @@ export type ItsupUpdateStrategyGitHub = {
  *
  * @public
  */
-export type ItsupUpdateStrategyGitHubPython = {
+export type ItsonUpdateStrategyGitHubPython = {
 	cli: string
 	owner: string
 	repo: string
@@ -28,26 +28,26 @@ export type ItsupUpdateStrategyGitHubPython = {
 /**
  * @public
  */
-export type ItsupConfigApplication = {
+export type ItsonConfigApplication = {
 	arguments?: string[]
 	command: string
 	name: string
-	update?: ItsupUpdateStrategyGitHub | ItsupUpdateStrategyGitHubPython
+	update?: ItsonUpdateStrategyGitHub | ItsonUpdateStrategyGitHubPython
 }
 
 /**
  * @public
  */
-export type ItsupConfig = {
-	applications: ItsupConfigApplication[]
+export type ItsonConfig = {
+	applications: ItsonConfigApplication[]
 	// TODO more stuff
 	runOnStartup: boolean
 }
 
 /**
- * Itsup configuration factory function for type safety.
+ * Itson configuration factory function for type safety.
  * @public
  */
-export function itsupConfig(config: ItsupConfig): ItsupConfig {
+export function itsonConfig(config: ItsonConfig): ItsonConfig {
 	return config
 }

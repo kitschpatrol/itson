@@ -1,11 +1,11 @@
 import { consola } from 'consola'
-import type { ItsupConfig } from '../config'
+import type { ItsonConfig } from '../config'
 import { startApp } from '../service'
 
 /**
  * Start all applications, default behavior
  */
-export async function startAllApplications(config: ItsupConfig) {
+export async function startAllApplications(config: ItsonConfig) {
 	consola.info('Starting all applications')
 
 	// Start all applications

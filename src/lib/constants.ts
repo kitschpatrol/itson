@@ -1,1 +1,1 @@
-export const KEYCHAIN_SERVICE = 'itsup-cli'
+export const KEYCHAIN_SERVICE = 'itson-cli'

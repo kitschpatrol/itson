@@ -26,7 +26,7 @@ async function clearCredentials() {
  * Clear any credentials stored in the system keychain, and remove any registered services
  */
 export async function reset() {
-	consola.info('Resetting itsup')
+	consola.info('Resetting itson')
 	await unregisterAll()
 	await clearCredentials()
 }

@@ -4,7 +4,7 @@ import { consola } from 'consola'
 import { version } from '../../package.json'
 import { updateAllApplications } from '../lib/commands/update'
 import { loadConfig } from 'c12'
-import { ItsupConfig } from '../lib/config'
+import { ItsonConfig } from '../lib/config'
 import { startAllApplications } from '../lib/commands/start'
 import os from 'os'
 import { stopAllApplications } from '../lib/commands/stop'
@@ -12,8 +12,8 @@ import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
 
 // Config
-const { config, configFile, source, cwd } = await loadConfig<ItsupConfig>({
-	name: 'itsup',
+const { config, configFile, source, cwd } = await loadConfig<ItsonConfig>({
+	name: 'itson',
 	cwd: os.homedir(), // rcfile search in home dir doesn't seem to work...
 	globalRc: true,
 })
@@ -22,8 +22,8 @@ const yargsInstance = yargs(hideBin(process.argv))
 
 // yes
 await yargsInstance
-	.scriptName('itsup')
-	.usage('$0 [command]', 'Run an itsup command.')
+	.scriptName('itson')
+	.usage('$0 [command]', 'Run an itson command.')
 	.option('verbose', {
 		description: 'Run with verbose logging',
 		type: 'boolean',
@@ -33,8 +33,8 @@ await yargsInstance
 		'Update, register, and start all managed applications. Applications will auto-restart if they crash.',
 		() => {},
 		async ({ verbose }) => {
-			consola.info(`Itsup config file found at "${configFile}"`)
-			consola.info('Launching itsup')
+			consola.info(`Itson config file found at "${configFile}"`)
+			consola.info('Launching itson')
 
 			await register(config)
 			await updateAllApplications(config)
@@ -67,7 +67,7 @@ await yargsInstance
 	)
 	.command(
 		'register',
-		'Register itsup with the system according to the config file. Optionally run this after changing state in the config file.',
+		'Register itson with the system according to the config file. Optionally run this after changing state in the config file.',
 		() => {},
 		async ({ verbose }) => {
 			register(config)

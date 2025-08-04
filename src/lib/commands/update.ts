@@ -11,7 +11,7 @@ import { basename, join } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import semver from 'semver'
-import type { ItsupConfig } from '../../lib/config.js'
+import type { ItsonConfig } from '../../lib/config.js'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { getVersion, unzip } from '../../lib/utilities.js'
 
@@ -179,7 +179,7 @@ async function downloadReleaseAsset(
 			return
 		}
 
-		const temporaryDirectory = join(tmpdir(), 'itsup')
+		const temporaryDirectory = join(tmpdir(), 'itson')
 		await mkdir(temporaryDirectory, { recursive: true })
 		const filePath = join(temporaryDirectory, asset.name)
 
@@ -261,7 +261,7 @@ export async function updateApplicationFromGitHubRelease(
  * Update all applications in the config
  * @public
  */
-export async function updateAllApplications(config: ItsupConfig) {
+export async function updateAllApplications(config: ItsonConfig) {
 	for (const application of config.applications) {
 		if (application.update !== undefined) {
 			if (application.update.type === 'github') {
