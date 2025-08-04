@@ -18,12 +18,41 @@ export async function unzip(filePath: string): Promise<string> {
 	try {
 		const { stdout } = await execa('unzip', ['-l', filePath])
 		const lines = stdout.split('\n')
-		const topLevelItem = lines[3].split(/\s+/)[4]
+
+		// The header is in lines[1], e.g. '  Length      Date    Time    Name'
+		const nameHeaderIndex = lines[1].indexOf('Name')
+		if (nameHeaderIndex === -1) {
+			throw new Error('Could not determine file list from unzip output.')
+		}
+
+		// The file list starts at lines[3]
+		let topLevelItem = ''
+		for (let i = 3; i < lines.length; i++) {
+			const line = lines[i]
+			// The list is terminated by a line of dashes
+			if (line.trim().startsWith('---')) {
+				break
+			}
+			// Get the file name, which is everything from the 'Name' column index onwards
+			const name = line.slice(Math.max(0, nameHeaderIndex)).trim()
+			if (name) {
+				// We only care about the top-level directory or file
+				topLevelItem = name.split('/')[0]
+				break // Found the first item, we can stop
+			}
+		}
 
 		await execa('unzip', ['-o', filePath, '-d', extractTo])
 		consola.success(`Unzipped ${filePath} to ${extractTo}`)
 		await deleteFileSafe(filePath)
-		return join(extractTo, topLevelItem)
+
+		if (!topLevelItem) {
+			consola.warn(`Could not determine top-level item in ${filePath}.`)
+			return extractTo
+		}
+
+		const result = join(extractTo, topLevelItem)
+		return result
 	} catch (error) {
 		consola.error(`Error unzipping file: ${error instanceof Error ? error.message : String(error)}`)
 		throw error
