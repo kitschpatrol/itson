@@ -12,6 +12,8 @@ export type ItsonUpdateStrategyGitHub = {
 	owner: string
 	repo: string
 	type: 'github'
+	/** If not provided, the latest version will be used. */
+	version?: string
 }
 
 /**
@@ -22,6 +24,20 @@ export type ItsonUpdateStrategyGitHubPython = {
 	owner: string
 	repo: string
 	type: 'github-python'
+	/** If not provided, the latest version will be used. */
+	version?: string
+}
+
+/**
+ * Itson log upload strategy
+ * @public
+ */
+export type ItsonLogUploadStrategyS3 = {
+	bucketName: string
+	endpoint: string
+	localPath: string
+	remotePath?: string
+	type: 's3'
 }
 
 /**
@@ -30,6 +46,7 @@ export type ItsonUpdateStrategyGitHubPython = {
 export type ItsonConfigApplication = {
 	arguments?: string[]
 	command: string
+	logUpload?: ItsonLogUploadStrategyS3
 	name: string
 	update?: ItsonUpdateStrategyGitHub | ItsonUpdateStrategyGitHubPython
 }

@@ -10,6 +10,7 @@ import os from 'os'
 import { stopAllApplications } from '../lib/commands/stop'
 import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
+import { uploadAllApplicationLogs } from '../lib/commands/log-upload'
 
 // Config
 const { config, configFile, source, cwd } = await loadConfig<ItsonConfig>({
@@ -38,6 +39,7 @@ await yargsInstance
 
 			await register(config)
 			await updateAllApplications(config)
+			await uploadAllApplicationLogs(config)
 			await startAllApplications(config)
 		},
 	)
@@ -63,6 +65,14 @@ await yargsInstance
 		() => {},
 		async ({ verbose }) => {
 			await updateAllApplications(config)
+		},
+	)
+	.command(
+		'upload-logs',
+		'Upload all application logs to the configured S3 bucket.',
+		() => {},
+		async ({ verbose }) => {
+			await uploadAllApplicationLogs(config)
 		},
 	)
 	.command(

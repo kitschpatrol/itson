@@ -149,10 +149,10 @@ Itson is responsible for the following:
 - Updating exhibit application software non-interactively
 - Securely storing credentials required for updates
 - Ensuring that exhibit application software restarts automatically in the event of a crash
+- Uploading log files to S3
 
 Itson is currently **not** concerned with the following:
 
-- Logging / analytics / observability
 - Scheduling
 - Automatic rollback
 
