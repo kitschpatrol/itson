@@ -4,6 +4,7 @@ import { S3FolderSync } from '../log-uploader'
 
 /**
  * Upload the logs for a single application
+ * @public
  */
 export async function uploadApplicationLogs(application: ItsonConfigApplication) {
 	if (!application.logUpload) {

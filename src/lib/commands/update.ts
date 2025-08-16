@@ -322,6 +322,7 @@ async function downloadReleaseAsset(
  * Update an application from a GitHub release
  * @public
  */
+// eslint-disable-next-line complexity
 export async function updateApplicationFromGitHubRelease(
 	owner: string,
 	repo: string,
