@@ -66,6 +66,51 @@ type GitHubRelease = {
 }
 
 /**
+ * Get all releases from a GitHub repository
+ * @public
+ */
+export async function getAllReleases(owner: string, repo: string): Promise<GitHubRelease[]> {
+	const pat = await getGitHubPat()
+	if (!pat) {
+		return []
+	}
+
+	const octokit = new Octokit({
+		auth: pat,
+		request: {
+			timeout: 5000,
+		},
+		retry: {
+			doNotRetry: [429],
+			retries: 5,
+		},
+	})
+
+	try {
+		const releases = await octokit.paginate(octokit.repos.listReleases, {
+			owner,
+			// eslint-disable-next-line ts/naming-convention
+			per_page: 100,
+			repo,
+		})
+
+		return releases.map((release) => ({
+			artifacts: release.assets.map((asset) => ({
+				browserDownloadUrl: asset.browser_download_url,
+				name: asset.name,
+				url: asset.url,
+			})),
+			version: release.tag_name.replace(/^v/, ''),
+		}))
+	} catch (error) {
+		consola.error(
+			`Error fetching releases for ${owner}/${repo}: ${error instanceof Error ? error.message : String(error)}`,
+		)
+		return []
+	}
+}
+
+/**
  * Get the latest release info from a GitHub repository
  * @public
  */
@@ -110,6 +155,41 @@ export async function getLatestRelease(
 	}
 }
 
+/**
+ * Find the best release that satisfies a semver constraint
+ * @public
+ */
+export async function getBestReleaseForConstraint(
+	owner: string,
+	repo: string,
+	versionConstraint?: string,
+): Promise<GitHubRelease | undefined> {
+	// If no constraint provided, use latest release
+	if (!versionConstraint) {
+		return getLatestRelease(owner, repo)
+	}
+
+	const allReleases = await getAllReleases(owner, repo)
+	if (allReleases.length === 0) {
+		return undefined
+	}
+
+	// Filter releases that satisfy the constraint and sort by version (highest first)
+	const satisfyingReleases = allReleases
+		.filter((release) => {
+			const version = semver.valid(release.version)
+			return version && semver.satisfies(version, versionConstraint)
+		})
+		.sort((a, b) => semver.rcompare(a.version, b.version))
+
+	if (satisfyingReleases.length === 0) {
+		consola.warn(`No releases found that satisfy version constraint: ${versionConstraint}`)
+		return undefined
+	}
+
+	return satisfyingReleases[0]
+}
+
 async function getVersionFromCLI(cli: string): Promise<string | undefined> {
 	try {
 		const { stdout } = await execa(cli, ['--version'], { reject: false })
@@ -126,20 +206,54 @@ async function updateApplicationFromGitHubPythonRelease(
 	owner: string,
 	repo: string,
 	cli: string,
+	versionConstraint?: string,
 ): Promise<void> {
 	const localVersion = await getVersionFromCLI(cli)
-	const release = await getLatestRelease(owner, repo)
+
+	// If we have a local version and an EXACT version constraint, check if it matches
+	// For range constraints (^, ~, etc.), we still want aggressive updates within the range
+	if (
+		localVersion &&
+		versionConstraint &&
+		semver.valid(versionConstraint) &&
+		semver.eq(localVersion, versionConstraint)
+	) {
+		consola.info(`${cli} is already at the exact version specified: ${localVersion}.`)
+		return
+	}
+
+	const release = await getBestReleaseForConstraint(owner, repo, versionConstraint)
 
 	if (!release) {
 		return
 	}
 
-	if (localVersion && !semver.gt(release.version, localVersion)) {
+	// If we have a constraint, check if the release is different from local
+	// For exact versions, allow downgrades; for ranges, only upgrade
+	if (localVersion && versionConstraint) {
+		// Check if this is an exact version using semver API
+		const isExactVersion = semver.valid(versionConstraint) !== null
+		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
+			// For range constraints, only upgrade
+			consola.info(
+				`${cli} is already up to date with version ${localVersion} (best available: ${release.version}).`,
+			)
+			return
+		}
+		// For exact versions, we already checked equality above, so if we're here, proceed with install
+	}
+
+	// If no constraint but local version is same or newer than release, skip
+	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
 		consola.info(`${cli} is already up to date with version ${localVersion}.`)
 		return
 	}
 
-	consola.info('Installing latest release version:', release.version)
+	const isDowngrade = localVersion && semver.lt(release.version, localVersion)
+	const action = isDowngrade ? 'Downgrading to' : 'Installing'
+	consola.info(
+		`${action} release version: ${release.version}${versionConstraint ? ` (satisfies ${versionConstraint})` : ''}`,
+	)
 	const pat = await getGitHubPat()
 	if (!pat) {
 		return
@@ -188,7 +302,7 @@ async function downloadReleaseAsset(
 		await pipeline(Readable.fromWeb(response.body), createWriteStream(filePath))
 
 		const fileStats = await stat(filePath)
-		consola.success(
+		consola.debug(
 			`Downloaded ${asset.name} (${(fileStats.size / 1024).toFixed(2)} KB) to ${filePath}`,
 		)
 
@@ -213,17 +327,47 @@ export async function updateApplicationFromGitHubRelease(
 	repo: string,
 	destination: string,
 	artifactPattern: RegExp,
+	versionConstraint?: string,
 ): Promise<Array<string | undefined>> {
 	const downloadedPaths: Array<string | undefined> = []
 
 	const localVersion = await getVersion(destination)
-	const release = await getLatestRelease(owner, repo)
+
+	// If we have a local version and an EXACT version constraint, check if it matches
+	// For range constraints (^, ~, etc.), we still want aggressive updates within the range
+	if (
+		localVersion &&
+		versionConstraint &&
+		semver.valid(versionConstraint) &&
+		semver.eq(localVersion, versionConstraint)
+	) {
+		consola.info(`${destination} is already at the exact version specified: ${localVersion}.`)
+		return downloadedPaths
+	}
+
+	const release = await getBestReleaseForConstraint(owner, repo, versionConstraint)
 
 	if (!release) {
 		return downloadedPaths
 	}
 
-	if (localVersion && !semver.gt(release.version, localVersion)) {
+	// If we have a constraint, check if the release is different from local
+	// For exact versions, allow downgrades; for ranges, only upgrade
+	if (localVersion && versionConstraint) {
+		// Check if this is an exact version using semver API
+		const isExactVersion = semver.valid(versionConstraint) !== null
+		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
+			// For range constraints, only upgrade
+			consola.info(
+				`${destination} is already up to date with version ${localVersion} (best available: ${release.version}).`,
+			)
+			return downloadedPaths
+		}
+		// For exact versions, we already checked equality above, so if we're here, proceed with install
+	}
+
+	// If no constraint but local version is same or newer than release, skip
+	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
 		consola.info(`${destination} is already up to date with version ${localVersion}.`)
 		return downloadedPaths
 	}
@@ -233,12 +377,19 @@ export async function updateApplicationFromGitHubRelease(
 	)
 
 	if (filteredArtifacts.length === 0) {
-		consola.warn('No matching release assets found.')
+		consola.warn(
+			`No matching release assets found for "${owner}/${repo}" with version ${release.version}.`,
+		)
 		return downloadedPaths
 	}
 
-	consola.info('Latest release artifacts:')
-	consola.info(filteredArtifacts)
+	const isDowngrade = localVersion && semver.lt(release.version, localVersion)
+	const action = isDowngrade ? 'Downgrading to' : 'Upgrading to'
+	consola.info(
+		`${action} release version: ${release.version}${versionConstraint ? ` (satisfies ${versionConstraint})` : ''}`,
+	)
+	consola.debug('Release artifacts:')
+	consola.debug(filteredArtifacts)
 
 	const pat = await getGitHubPat()
 	if (pat) {
@@ -270,6 +421,7 @@ export async function updateAllApplications(config: ItsonConfig) {
 					application.update.repo,
 					application.update.destination,
 					application.update.artifactPattern,
+					application.update.version,
 				)
 
 				for (const downloadedPath of downloadedPaths) {
@@ -290,6 +442,7 @@ export async function updateAllApplications(config: ItsonConfig) {
 					application.update.owner,
 					application.update.repo,
 					application.command,
+					application.update.version,
 				)
 			}
 		}

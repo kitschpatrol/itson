@@ -43,7 +43,7 @@ export async function unzip(filePath: string): Promise<string> {
 		}
 
 		await execa('unzip', ['-o', filePath, '-d', extractTo])
-		consola.success(`Unzipped ${filePath} to ${extractTo}`)
+		consola.debug(`Unzipped ${filePath} to ${extractTo}`)
 		await deleteFileSafe(filePath)
 
 		if (!topLevelItem) {
@@ -74,7 +74,7 @@ export async function getVersion(filePath: string): Promise<string | undefined> 
 		const { stdout } = await execa('defaults', ['read', plistPath, 'CFBundleShortVersionString'])
 		return stdout.trim()
 	} catch (error) {
-		consola.error(
+		consola.debug(
 			`Error getting version for ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return undefined
