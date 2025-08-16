@@ -32,12 +32,13 @@ export class S3FolderSync {
 		return 's3-secret-key'
 	}
 
+	private readonly ignorePatterns: string[]
 	private s3Client: S3Client | undefined = undefined
 
-	constructor(
-		private readonly config: ItsonLogUploadStrategyS3,
-		private readonly ignorePatterns: string[] = IGNORE_PATTERNS,
-	) {}
+	constructor(private readonly config: ItsonLogUploadStrategyS3) {
+		// Combine default ignore patterns with user-provided patterns
+		this.ignorePatterns = [...IGNORE_PATTERNS, ...(this.config.ignorePatterns ?? [])]
+	}
 
 	/**
 	 * Clear stored credentials (useful for switching accounts or troubleshooting)

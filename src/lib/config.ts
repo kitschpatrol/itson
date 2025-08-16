@@ -35,6 +35,10 @@ export type ItsonUpdateStrategyGitHubPython = {
 export type ItsonLogUploadStrategyS3 = {
 	bucketName: string
 	endpoint: string
+	/**
+	 * Minimatch patterns to ignore when uploading logs. These are applied in addition to a default set of common patterns.
+	 */
+	ignorePatterns?: string[]
 	localPath: string
 	remotePath?: string
 	type: 's3'

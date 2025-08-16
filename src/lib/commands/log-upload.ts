@@ -21,6 +21,7 @@ export async function uploadApplicationLogs(application: ItsonConfigApplication)
 	consola.info(
 		`Uploading logs for ${application.name} from ${application.logUpload.localPath} to ${application.logUpload.bucketName}/${application.logUpload.remotePath}`,
 	)
+
 	const applicationLogUploader = new S3FolderSync(application.logUpload)
 	try {
 		await applicationLogUploader.sync()
