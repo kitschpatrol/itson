@@ -29,12 +29,15 @@ Itson does the following each time it runs:
    _For now, this amounts to scheduling itson's own launch on future startups._
 
 2. **Check** for available updates to exhibit applications, prompting for credentials if necessary. \
-   _For now, this is limited to checking for new releases on GitHub, and follows [semver](https://semver.org/) rules._
+   _For now, this is limited to checking for new releases on GitHub, and follows [semver](https://semver.org/) rules. The latest release is selected by default, or a semver-compatible version constraint or range may be specified in the application's configuration. GitHub credentials are requested interactively as needed and securely stored for subsequent use._
 
 3. **Download** and **install** updates if available. \
    _For now, this means standalone pre-built `.exe` binaries or `.app` bundles provided as assets attached to GitHub releases, or `uv tool`-installable Python application packages hosted in GitHub repositories._
 
-4. **Start** exhibit application(s) using the system-level services framework, and keep them running if they're closed or crash. \
+4. **Upload** log files. \
+   _For now, this means syncing a folder of log files to an S3-compatible object storage bucket for each application. S3 credentials are requested interactively as needed and then securely stored in the system keychain for subsequent use._
+
+5. **Start** exhibit application(s) using the system-level services framework, and keep them running if they're closed or crash. \
    _For now, this leverages `launchd` on macOS._
 
 ## Getting started
