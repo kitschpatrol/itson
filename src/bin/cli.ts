@@ -29,11 +29,17 @@ await yargsInstance
 		description: 'Run with verbose logging',
 		type: 'boolean',
 	})
+	.middleware((argv) => {
+		// Set console level globally based on verbose flag
+		if (argv.verbose) {
+			consola.level = 5 // Shows debug messages
+		}
+	})
 	.command(
 		['$0', 'launch'],
 		'Update, register, and start all managed applications. Applications will auto-restart if they crash.',
 		() => {},
-		async ({ verbose }) => {
+		async () => {
 			consola.info(`Itson config file found at "${configFile}"`)
 			consola.info('Launching itson')
 
@@ -47,7 +53,7 @@ await yargsInstance
 		'start',
 		'Start all managed applications. Applications will auto-restart if they crash.',
 		() => {},
-		async ({ verbose }) => {
+		async () => {
 			await startAllApplications(config)
 		},
 	)
@@ -55,7 +61,7 @@ await yargsInstance
 		'stop',
 		'Stop all managed applications.',
 		() => {},
-		async ({ verbose }) => {
+		async () => {
 			await stopAllApplications(config)
 		},
 	)
@@ -63,7 +69,7 @@ await yargsInstance
 		'update',
 		'Update all managed applications to the latest available versions.',
 		() => {},
-		async ({ verbose }) => {
+		async () => {
 			await updateAllApplications(config)
 		},
 	)
@@ -71,7 +77,7 @@ await yargsInstance
 		'upload-logs',
 		'Upload all application logs to the configured S3 bucket.',
 		() => {},
-		async ({ verbose }) => {
+		async () => {
 			await uploadAllApplicationLogs(config)
 		},
 	)
@@ -79,7 +85,7 @@ await yargsInstance
 		'register',
 		'Register itson with the system according to the config file. Optionally run this after changing state in the config file.',
 		() => {},
-		async ({ verbose }) => {
+		async () => {
 			register(config)
 		},
 	)
@@ -87,7 +93,7 @@ await yargsInstance
 		'reset',
 		'Clear any credentials stored in the system keychain, and remove any registered services.',
 		() => {},
-		async ({ verbose }) => {
+		async () => {
 			await reset()
 		},
 	)
