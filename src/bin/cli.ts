@@ -101,5 +101,6 @@ await yargsInstance
 	.version(version)
 	.alias('v', 'version')
 	.help()
+	.strict()
 	.wrap(process.stdout.isTTY ? Math.min(120, yargsInstance.terminalWidth()) : 0)
 	.parse()
