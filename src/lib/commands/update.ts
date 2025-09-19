@@ -15,7 +15,6 @@ import type { ItsonConfig } from '../../lib/config.js'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { getVersion, unzip } from '../../lib/utilities.js'
 
-// eslint-disable-next-line ts/naming-convention
 const GITHUB_PAT_ACCOUNT = 'github-pat'
 
 async function getGitHubPat(): Promise<string | undefined> {
@@ -180,7 +179,7 @@ export async function getBestReleaseForConstraint(
 			const version = semver.valid(release.version)
 			return version && semver.satisfies(version, versionConstraint)
 		})
-		.sort((a, b) => semver.rcompare(a.version, b.version))
+		.toSorted((a, b) => semver.rcompare(a.version, b.version))
 
 	if (satisfyingReleases.length === 0) {
 		consola.warn(`No releases found that satisfy version constraint: ${versionConstraint}`)

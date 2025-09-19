@@ -13,7 +13,7 @@ import { KEYCHAIN_SERVICE } from '../lib/constants.js' // Adjust path as needed
 /**
  * Glob patterns for files to ignore during log upload
  */
-// eslint-disable-next-line ts/naming-convention
+
 const IGNORE_PATTERNS = [
 	'.DS_Store',
 	'**/.DS_Store',
@@ -32,10 +32,12 @@ export class S3FolderSync {
 		return 's3-secret-key'
 	}
 
+	private readonly config: ItsonLogUploadStrategyS3
 	private readonly ignorePatterns: string[]
 	private s3Client: S3Client | undefined = undefined
 
-	constructor(private readonly config: ItsonLogUploadStrategyS3) {
+	constructor(config: ItsonLogUploadStrategyS3) {
+		this.config = config
 		// Combine default ignore patterns with user-provided patterns
 		this.ignorePatterns = [...IGNORE_PATTERNS, ...(this.config.ignorePatterns ?? [])]
 	}
