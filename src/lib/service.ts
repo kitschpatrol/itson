@@ -83,6 +83,10 @@ export async function startService(
     </dict>`
 				: '<false/>'
 		}		
+    <key>SessionCreate</key>
+    <false/>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
     <key>StandardOutPath</key>
     <string>/tmp/${label}.out.log</string>
     <key>StandardErrorPath</key>
