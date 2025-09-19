@@ -139,7 +139,7 @@ itson [command]
 
 #### Updates / deployment
 
-Update functionality can be baked into applications (e.g. [Squirrel](https://github.com/Squirrel), [Sparkle](https://sparkle-project.org/), [Electron autoUpdater](https://www.electronjs.org/docs/latest/api/auto-updater), etc.), but these are geared toward end-user applications and generally display their prompts interactively — unworkable for an "always up" interactive exhibit application.
+Update functionality can be baked into applications (e.g. [Squirrel](https://github.com/Squirrel), [Sparkle](https://sparkle-project.org/), [Electron autoUpdater](https://www.electronjs.org/docs/latest/api/auto-updater), etc.), but these are geared toward end-user applications and generally display their prompts interactively — unworkable for an "always on" interactive exhibit application.
 
 [Homebrew](https://brew.sh) or [Scoop](https://scoop.sh/) implement robust and readily-scriptable package management solutions, but none are (practically) cross-platform. Securing and managing private registries for one-off applications is a bit of a pain.
 
@@ -157,13 +157,13 @@ Itson is responsible for the following:
 Itson is currently **not** concerned with the following:
 
 - Scheduling
-- Automatic rollback
+- Automatic rollback (Though manual rollback can be accomplished by pinning a specific version in the `itson.config.js` file.)
 
 ### Development notes
 
 Itson itself is not a long-running process. It runs once at startup, and then hands over responsibility for application monitoring to the operating system's native service-management facilities.
 
-Native implementations are used wherever possible (e.g. launchd for process management, the system keychain for credential storage.)
+Native implementations are used wherever possible (e.g. `launchd` for process management, the system keychain for credential storage.)
 
 #### Launchd
 
