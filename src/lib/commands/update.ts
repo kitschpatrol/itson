@@ -264,7 +264,7 @@ async function updateApplicationFromGitHubPythonRelease(
 			'install',
 			`git+https://${pat}@github.com/${owner}/${repo}@v${release.version}`,
 		])
-		console.info(stdout)
+		consola.info(stdout)
 	} catch (error) {
 		consola.error(
 			`Error installing ${owner}/${repo}@v${release.version}: ${error instanceof Error ? error.message : String(error)}`,
