@@ -1,4 +1,6 @@
 /* eslint-disable ts/member-ordering */
+// TODO revisit client-s3 version
+// Currently pinned to 3.893.0 because of issues in another project, which might not apply here
 import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { consola } from 'consola'
 import keytar from 'keytar-forked'
@@ -346,7 +348,7 @@ export class S3FolderSync {
 
 	/**
 	 * Upload a file to S3
-	 * @throws
+	 * @throws {Error}
 	 */
 	private async uploadFile(localFilePath: string): Promise<void> {
 		if (!this.s3Client) {
