@@ -1,4 +1,4 @@
-import { consola } from 'consola'
+import { log } from 'lognow'
 import type { ItsonConfig } from '../config'
 import { registerItson, unregisterItson } from '../service'
 
@@ -8,10 +8,10 @@ import { registerItson, unregisterItson } from '../service'
 export async function register(config: ItsonConfig) {
 	// Register itson if appropriate
 	if (config.runOnStartup) {
-		consola.info('Registering itson to run on startup')
+		log.info('Registering itson to run on startup')
 		await registerItson()
 	} else {
-		consola.info('Unregistering itson from running on startup')
+		log.info('Unregistering itson from running on startup')
 		await unregisterItson()
 	}
 }

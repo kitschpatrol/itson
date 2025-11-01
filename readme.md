@@ -172,6 +172,11 @@ Itson itself is not a long-running process. It runs once at startup, and then ha
 
 Though the tool itself is written in TypeScript, the actual functionality is provided by platform-native implementations wherever possible. (E.g. `launchd` for process management, the system keychain for credential storage.)
 
+#### Binary management
+
+- [mise](https://mise.jdx.dev/)
+- [ubi](https://github.com/houseabsolute/ubi)
+
 #### Launchd
 
 - [svcinstall](https://github.com/bryanmacfarlane/svcinstall) (cross-platform)
@@ -179,6 +184,11 @@ Though the tool itself is written in TypeScript, the actual functionality is pro
 - [launchd.info](https://launchd.info/)
 - Agents: `~/Library/LaunchAgents/`
 - Logs: `/tmp/`
+- Interesting precedent: [node-mac](https://github.com/coreybutler/node-mac), [node-windows](https://github.com/coreybutler/node-windows), [node-linux](https://github.com/coreybutler/node-linux).
+
+#### Cron
+
+- [cronstrue](https://www.npmjs.com/package/cronstrue)
 
 #### Keychain
 

@@ -1,4 +1,4 @@
-import { consola } from 'consola'
+import { log } from 'lognow'
 import { execa } from 'execa'
 import { readFile, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -43,18 +43,18 @@ export async function unzip(filePath: string): Promise<string> {
 		}
 
 		await execa('unzip', ['-o', filePath, '-d', extractTo])
-		consola.debug(`Unzipped ${filePath} to ${extractTo}`)
+		log.debug(`Unzipped ${filePath} to ${extractTo}`)
 		await deleteFileSafe(filePath)
 
 		if (!topLevelItem) {
-			consola.warn(`Could not determine top-level item in ${filePath}.`)
+			log.warn(`Could not determine top-level item in ${filePath}.`)
 			return extractTo
 		}
 
 		const result = join(extractTo, topLevelItem)
 		return result
 	} catch (error) {
-		consola.error(`Error unzipping file: ${error instanceof Error ? error.message : String(error)}`)
+		log.error(`Error unzipping file: ${error instanceof Error ? error.message : String(error)}`)
 		throw error
 	}
 }
@@ -74,7 +74,7 @@ export async function getVersion(filePath: string): Promise<string | undefined> 
 		const { stdout } = await execa('defaults', ['read', plistPath, 'CFBundleShortVersionString'])
 		return stdout.trim()
 	} catch (error) {
-		consola.debug(
+		log.debug(
 			`Error getting version for ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return undefined
@@ -125,10 +125,10 @@ export async function checkInternetConnectivity() {
 	if (stdout.includes('1 packets received')) {
 		return true
 	}
-	consola.error(
+	log.error(
 		'No internet connectivity detected. Please check your network connection and try again.',
 	)
-	consola.error(stdout)
-	consola.error(stderr)
+	log.error(stdout)
+	log.error(stderr)
 	return false
 }

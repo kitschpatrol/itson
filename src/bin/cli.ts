@@ -2,7 +2,7 @@
 
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { consola } from 'consola'
+import { log, setDefaultLogOptions } from 'lognow'
 import { version } from '../../package.json'
 import { updateAllApplications } from '../lib/commands/update'
 import { loadConfig } from 'c12'
@@ -33,17 +33,15 @@ await yargsInstance
 	})
 	.middleware((argv) => {
 		// Set console level globally based on verbose flag
-		if (argv.verbose) {
-			consola.level = 5 // Shows debug messages
-		}
+		setDefaultLogOptions({ verbose: argv.verbose })
 	})
 	.command(
 		['$0', 'launch'],
 		'Update, register, and start all managed applications. Applications will auto-restart if they crash.',
 		() => {},
 		async () => {
-			consola.info(`Itson config file found at "${configFile}"`)
-			consola.info('Launching itson')
+			log.info(`Itson config file found at "${configFile}"`)
+			log.info('Launching itson')
 
 			await register(config)
 			await updateAllApplications(config)

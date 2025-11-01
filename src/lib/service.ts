@@ -1,4 +1,4 @@
-import { consola } from 'consola'
+import { log } from 'lognow'
 import { execa } from 'execa'
 import { glob, writeFile } from 'node:fs/promises'
 import os from 'node:os'
@@ -39,7 +39,7 @@ export async function startService(
 		throw new Error('Daemonization is currently only supported on macOS.')
 	}
 
-	consola.info(`Starting service for ${application.name}`)
+	log.info(`Starting service for ${application.name}`)
 
 	const label = getServiceLabel(application.name)
 	const guiDomain = getGuiDomain()
@@ -98,49 +98,49 @@ export async function startService(
 	const { isLoaded, isRunning } = await getServiceState(label)
 
 	if (isLoaded) {
-		consola.info(`Service ${label} is already loaded.`)
+		log.info(`Service ${label} is already loaded.`)
 	} else {
-		consola.info(`Service ${label} is not loaded.`)
+		log.info(`Service ${label} is not loaded.`)
 	}
 	if (isRunning) {
-		consola.info(`Service ${label} is running.`)
+		log.info(`Service ${label} is running.`)
 	}
 
 	let isPlistChanged = false
 	const existingPlistContent = await readFileSafe(plistPath)
 	if (existingPlistContent === plistContent) {
-		consola.info(`No changes to ${plistPath}`)
+		log.info(`No changes to ${plistPath}`)
 	} else {
-		consola.info(`Plist for ${label} has changed`)
+		log.info(`Plist for ${label} has changed`)
 		isPlistChanged = true
 	}
 
 	try {
 		if (isLoaded && isPlistChanged) {
-			consola.info(`Booting out service ${label} to apply changes`)
+			log.info(`Booting out service ${label} to apply changes`)
 			await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 		}
 
 		if (isPlistChanged) {
 			await writeFile(plistPath, plistContent, 'utf8')
-			consola.info(`Wrote launchd service to ${plistPath}`)
+			log.info(`Wrote launchd service to ${plistPath}`)
 		}
 
 		if (!isLoaded || isPlistChanged) {
-			consola.info('Bootstrapping service')
+			log.info('Bootstrapping service')
 			await execa('launchctl', ['bootstrap', guiDomain, plistPath])
 		}
 
 		if (runNow) {
 			if (isRunning) {
-				consola.info(`Service ${label} is already running, not starting again.`)
+				log.info(`Service ${label} is already running, not starting again.`)
 			} else {
-				consola.info(`Starting service ${label} now`)
+				log.info(`Starting service ${label} now`)
 				await execa('launchctl', ['kickstart', `${guiDomain}/${label}`])
 			}
 		}
 	} catch (error) {
-		consola.error(
+		log.error(
 			`Failed to register launchd service: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		throw error
@@ -173,7 +173,7 @@ export async function unregisterAll() {
 	for (const plistFile of plistPaths) {
 		const label = path.basename(plistFile, '.plist')
 		await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
-		consola.info(`Unloaded launchd service from ${plistFile}`)
+		log.info(`Unloaded launchd service from ${plistFile}`)
 		await deleteFileSafe(plistFile)
 	}
 }

@@ -1,6 +1,6 @@
 // @case-police-ignore Api
 import { Octokit } from '@octokit/rest'
-import { consola } from 'consola'
+import { log } from 'lognow'
 import { execa } from 'execa'
 import findVersions from 'find-versions'
 import keytar from 'keytar-forked'
@@ -14,6 +14,7 @@ import semver from 'semver'
 import type { ItsonConfig } from '../../lib/config.js'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { getVersion, unzip } from '../../lib/utilities.js'
+import { text } from '@clack/prompts'
 
 const GITHUB_PAT_ACCOUNT = 'github-pat'
 
@@ -21,33 +22,29 @@ async function getGitHubPat(): Promise<string | undefined> {
 	let pat = await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)
 
 	if (!pat) {
-		consola.start('GitHub Personal Access Token not found')
+		log.info('GitHub Personal Access Token not found')
 
-		const newPat = await consola.prompt(
-			'Please enter your GitHub Personal Access Token (PAT) with `repo` scope:',
-			{
-				// Waiting for this to merge: https://github.com/unjs/consola/pull/366
-				type: 'text',
-				validate(value: string) {
-					if (!value) {
-						return 'A token is required.'
-					}
-					if (!value.startsWith('github_pat_')) {
-						return 'Please enter a valid GitHub Personal Access Token.'
-					}
-				},
+		const newPat = await text({
+			message: 'Please enter your GitHub Personal Access Token (PAT) with `repo` scope:',
+			validate(value: string) {
+				if (!value) {
+					return 'A token is required.'
+				}
+				if (!value.startsWith('github_pat_')) {
+					return 'Please enter a valid GitHub Personal Access Token.'
+				}
 			},
-		)
+		})
 
 		if (typeof newPat !== 'string' || newPat.length === 0) {
-			consola.info('Operation cancelled.')
+			log.info('Operation cancelled.')
 			return
 		}
 
 		pat = newPat
 
 		await keytar.setPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT, pat)
-		consola.success('GitHub PAT saved securely in your keychain.')
+		log.info('GitHub PAT saved securely in your keychain.')
 	}
 
 	return pat
@@ -102,7 +99,7 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 			version: release.tag_name.replace(/^v/, ''),
 		}))
 	} catch (error) {
-		consola.error(
+		log.error(
 			`Error fetching releases for ${owner}/${repo}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return []
@@ -148,7 +145,7 @@ export async function getLatestRelease(
 			version: latestRelease.tag_name.replace(/^v/, ''),
 		}
 	} catch (error) {
-		consola.error(
+		log.error(
 			`Error fetching latest release for ${owner}/${repo}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 	}
@@ -182,7 +179,7 @@ export async function getBestReleaseForConstraint(
 		.toSorted((a, b) => semver.rcompare(a.version, b.version))
 
 	if (satisfyingReleases.length === 0) {
-		consola.warn(`No releases found that satisfy version constraint: ${versionConstraint}`)
+		log.warn(`No releases found that satisfy version constraint: ${versionConstraint}`)
 		return undefined
 	}
 
@@ -194,7 +191,7 @@ async function getVersionFromCLI(cli: string): Promise<string | undefined> {
 		const { stdout } = await execa(cli, ['--version'], { reject: false })
 		return findVersions(stdout).at(0)
 	} catch (error) {
-		consola.error(
+		log.error(
 			`Error getting version from ${cli}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return undefined
@@ -217,7 +214,7 @@ async function updateApplicationFromGitHubPythonRelease(
 		semver.valid(versionConstraint) &&
 		semver.eq(localVersion, versionConstraint)
 	) {
-		consola.info(`${cli} is already at the exact version specified: ${localVersion}.`)
+		log.info(`${cli} is already at the exact version specified: ${localVersion}.`)
 		return
 	}
 
@@ -234,7 +231,7 @@ async function updateApplicationFromGitHubPythonRelease(
 		const isExactVersion = semver.valid(versionConstraint) !== null
 		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
 			// For range constraints, only upgrade
-			consola.info(
+			log.info(
 				`${cli} is already up to date with version ${localVersion} (best available: ${release.version}).`,
 			)
 			return
@@ -244,13 +241,13 @@ async function updateApplicationFromGitHubPythonRelease(
 
 	// If no constraint but local version is same or newer than release, skip
 	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
-		consola.info(`${cli} is already up to date with version ${localVersion}.`)
+		log.info(`${cli} is already up to date with version ${localVersion}.`)
 		return
 	}
 
 	const isDowngrade = localVersion && semver.lt(release.version, localVersion)
 	const action = isDowngrade ? 'Downgrading to' : 'Installing'
-	consola.info(
+	log.info(
 		`${action} release version: ${release.version}${versionConstraint ? ` (satisfies ${versionConstraint})` : ''}`,
 	)
 	const pat = await getGitHubPat()
@@ -264,9 +261,9 @@ async function updateApplicationFromGitHubPythonRelease(
 			'install',
 			`git+https://${pat}@github.com/${owner}/${repo}@v${release.version}`,
 		])
-		consola.info(stdout)
+		log.info(stdout)
 	} catch (error) {
-		consola.error(
+		log.error(
 			`Error installing ${owner}/${repo}@v${release.version}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 	}
@@ -288,7 +285,7 @@ async function downloadReleaseAsset(
 		})
 
 		if (!response.ok || !response.body) {
-			consola.error(`Error downloading asset: ${response.statusText}`)
+			log.error(`Error downloading asset: ${response.statusText}`)
 			return
 		}
 
@@ -301,9 +298,7 @@ async function downloadReleaseAsset(
 		await pipeline(Readable.fromWeb(response.body), createWriteStream(filePath))
 
 		const fileStats = await stat(filePath)
-		consola.debug(
-			`Downloaded ${asset.name} (${(fileStats.size / 1024).toFixed(2)} KB) to ${filePath}`,
-		)
+		log.debug(`Downloaded ${asset.name} (${(fileStats.size / 1024).toFixed(2)} KB) to ${filePath}`)
 
 		if (asset.name.endsWith('.zip')) {
 			return await unzip(filePath)
@@ -311,9 +306,7 @@ async function downloadReleaseAsset(
 
 		return filePath
 	} catch (error) {
-		consola.error(
-			`Error downloading asset: ${error instanceof Error ? error.message : String(error)}`,
-		)
+		log.error(`Error downloading asset: ${error instanceof Error ? error.message : String(error)}`)
 	}
 }
 
@@ -341,7 +334,7 @@ export async function updateApplicationFromGitHubRelease(
 		semver.valid(versionConstraint) &&
 		semver.eq(localVersion, versionConstraint)
 	) {
-		consola.info(`${destination} is already at the exact version specified: ${localVersion}.`)
+		log.info(`${destination} is already at the exact version specified: ${localVersion}.`)
 		return downloadedPaths
 	}
 
@@ -358,7 +351,7 @@ export async function updateApplicationFromGitHubRelease(
 		const isExactVersion = semver.valid(versionConstraint) !== null
 		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
 			// For range constraints, only upgrade
-			consola.info(
+			log.info(
 				`${destination} is already up to date with version ${localVersion} (best available: ${release.version}).`,
 			)
 			return downloadedPaths
@@ -368,7 +361,7 @@ export async function updateApplicationFromGitHubRelease(
 
 	// If no constraint but local version is same or newer than release, skip
 	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
-		consola.info(`${destination} is already up to date with version ${localVersion}.`)
+		log.info(`${destination} is already up to date with version ${localVersion}.`)
 		return downloadedPaths
 	}
 
@@ -377,7 +370,7 @@ export async function updateApplicationFromGitHubRelease(
 	)
 
 	if (filteredArtifacts.length === 0) {
-		consola.warn(
+		log.warn(
 			`No matching release assets found for "${owner}/${repo}" with version ${release.version}.`,
 		)
 		return downloadedPaths
@@ -385,11 +378,11 @@ export async function updateApplicationFromGitHubRelease(
 
 	const isDowngrade = localVersion && semver.lt(release.version, localVersion)
 	const action = isDowngrade ? 'Downgrading to' : 'Upgrading to'
-	consola.info(
+	log.info(
 		`${action} release version: ${release.version}${versionConstraint ? ` (satisfies ${versionConstraint})` : ''}`,
 	)
-	consola.debug('Release artifacts:')
-	consola.debug(filteredArtifacts)
+	log.debug('Release artifacts:')
+	log.debug(filteredArtifacts)
 
 	const pat = await getGitHubPat()
 	if (pat) {
@@ -400,7 +393,7 @@ export async function updateApplicationFromGitHubRelease(
 				await rm(destinationPath, { force: true, recursive: true })
 				await rename(downloadedPath, destinationPath)
 				downloadedPath = destinationPath
-				consola.success(`Moved ${basename(downloadedPath)} to ${destination}`)
+				log.info(`Moved ${basename(downloadedPath)} to ${destination}`)
 			}
 			downloadedPaths.push(downloadedPath)
 		}
@@ -430,10 +423,10 @@ export async function updateAllApplications(config: ItsonConfig) {
 						const version = await getVersion(downloadedPath)
 						// eslint-disable-next-line max-depth
 						if (version) {
-							consola.success(`Version of ${basename(downloadedPath)}: ${version}`)
+							log.info(`Version of ${basename(downloadedPath)}: ${version}`)
 						}
 					} else {
-						consola.error(`No downloaded path for ${application.name}`)
+						log.error(`No downloaded path for ${application.name}`)
 					}
 				}
 				// eslint-disable-next-line ts/no-unnecessary-condition

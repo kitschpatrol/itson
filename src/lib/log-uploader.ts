@@ -2,7 +2,7 @@
 // TODO revisit client-s3 version
 // Currently pinned to 3.893.0 because of issues in another project, which might not apply here
 import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { consola } from 'consola'
+import { log } from 'lognow'
 import keytar from 'keytar-forked'
 import { minimatch } from 'minimatch'
 import { createHash } from 'node:crypto'
@@ -11,6 +11,7 @@ import { readdir } from 'node:fs/promises'
 import { basename, join, relative, sep } from 'node:path'
 import type { ItsonLogUploadStrategyS3 } from './config'
 import { KEYCHAIN_SERVICE } from '../lib/constants.js' // Adjust path as needed
+import { text } from '@clack/prompts'
 
 /**
  * Glob patterns for files to ignore during log upload
@@ -51,7 +52,7 @@ export class S3FolderSync {
 		await keytar.deletePassword(KEYCHAIN_SERVICE, S3FolderSync.keychainAccessKeyAccount)
 		await keytar.deletePassword(KEYCHAIN_SERVICE, S3FolderSync.keychainSecretKeyAccount)
 
-		consola.success('S3 credentials cleared from keychain.')
+		log.info('S3 credentials cleared from keychain.')
 	}
 
 	/**
@@ -64,10 +65,10 @@ export class S3FolderSync {
 		)
 
 		if (!accessKeyId) {
-			consola.start('S3 Access Key ID not found')
+			log.warn('S3 Access Key ID not found')
 
-			const newAccessKeyId = await consola.prompt('Please enter your S3 Access Key ID:', {
-				type: 'text',
+			const newAccessKeyId = await text({
+				message: 'Please enter your S3 Access Key ID:',
 				validate(value: string) {
 					if (!value) {
 						return 'An access key ID is required.'
@@ -79,13 +80,13 @@ export class S3FolderSync {
 			})
 
 			if (typeof newAccessKeyId !== 'string' || newAccessKeyId.length === 0) {
-				consola.info('Operation cancelled.')
+				log.info('Operation cancelled.')
 				return
 			}
 
 			accessKeyId = newAccessKeyId
 			await keytar.setPassword(KEYCHAIN_SERVICE, S3FolderSync.keychainAccessKeyAccount, accessKeyId)
-			consola.success('S3 Access Key ID saved securely in your keychain.')
+			log.info('S3 Access Key ID saved securely in your keychain.')
 		}
 
 		return accessKeyId
@@ -101,10 +102,10 @@ export class S3FolderSync {
 		)
 
 		if (!secretAccessKey) {
-			consola.start('S3 Secret Access Key not found')
+			log.info('S3 Secret Access Key not found')
 
-			const newSecretAccessKey = await consola.prompt('Please enter your S3 Secret Access Key:', {
-				type: 'text',
+			const newSecretAccessKey = await text({
+				message: 'Please enter your S3 Secret Access Key:',
 				validate(value: string) {
 					if (!value) {
 						return 'A secret access key is required.'
@@ -116,7 +117,7 @@ export class S3FolderSync {
 			})
 
 			if (typeof newSecretAccessKey !== 'string' || newSecretAccessKey.length === 0) {
-				consola.info('Operation cancelled.')
+				log.info('Operation cancelled.')
 				return
 			}
 
@@ -126,7 +127,7 @@ export class S3FolderSync {
 				S3FolderSync.keychainSecretKeyAccount,
 				secretAccessKey,
 			)
-			consola.success('S3 Secret Access Key saved securely in your keychain.')
+			log.info('S3 Secret Access Key saved securely in your keychain.')
 		}
 
 		return secretAccessKey
@@ -136,26 +137,24 @@ export class S3FolderSync {
 	 * Perform the sync operation
 	 */
 	async sync(): Promise<void> {
-		consola.start(
-			`Starting sync from ${this.config.localPath} to S3 bucket ${this.config.bucketName}`,
-		)
+		log.info(`Starting sync from ${this.config.localPath} to S3 bucket ${this.config.bucketName}`)
 
 		try {
 			// Initialize client with credentials
 			if (!(await this.initializeClient())) {
-				consola.error('Failed to initialize S3 client - credentials not available')
+				log.error('Failed to initialize S3 client - credentials not available')
 				return
 			}
 
 			// Get all local files
-			consola.info('Scanning local files...')
+			log.info('Scanning local files...')
 			const localFiles = await this.getLocalFiles(this.config.localPath)
-			consola.info(`Found ${localFiles.length} local files`)
+			log.info(`Found ${localFiles.length} local files`)
 
 			// Get all remote files
-			consola.info('Fetching remote file list...')
+			log.info('Fetching remote file list...')
 			const remoteFiles = await this.getRemoteFiles()
-			consola.info(`Found ${remoteFiles.size} remote files`)
+			log.info(`Found ${remoteFiles.size} remote files`)
 
 			let uploadedCount = 0
 			let skippedCount = 0
@@ -169,17 +168,17 @@ export class S3FolderSync {
 					await this.uploadFile(localFilePath)
 					uploadedCount++
 				} else {
-					consola.info(`Skipping (up to date): ${localFilePath}`)
+					log.info(`Skipping (up to date): ${localFilePath}`)
 					skippedCount++
 				}
 			}
 
-			consola.success('Sync completed:')
-			consola.info(`- Uploaded: ${uploadedCount} files`)
-			consola.info(`- Skipped: ${skippedCount} files`)
-			consola.info(`- Remote files preserved: ${remoteFiles.size - uploadedCount} files`)
+			log.info('Sync completed:')
+			log.info(`- Uploaded: ${uploadedCount} files`)
+			log.info(`- Skipped: ${skippedCount} files`)
+			log.info(`- Remote files preserved: ${remoteFiles.size - uploadedCount} files`)
 		} catch (error) {
-			consola.error('Sync failed:', error)
+			log.error('Sync failed:', error)
 			throw error
 		}
 	}
@@ -357,7 +356,7 @@ export class S3FolderSync {
 
 		const remoteKey = this.getRemoteKey(localFilePath)
 
-		consola.info(`Uploading: ${localFilePath} -> ${remoteKey}`)
+		log.info(`Uploading: ${localFilePath} -> ${remoteKey}`)
 
 		const command = new PutObjectCommand({
 			// eslint-disable-next-line ts/naming-convention
