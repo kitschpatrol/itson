@@ -16,8 +16,6 @@ import { uploadAllApplicationLogs } from '../lib/commands/log-upload'
 
 setDefaultLogOptions({ name, logJsonToFile: true })
 
-log.getLoggerInstance('')
-
 // Config
 const { config, configFile } = await loadConfig<ItsonConfig>({
 	name: 'itson',

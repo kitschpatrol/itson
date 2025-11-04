@@ -3,6 +3,7 @@ import { text } from '@clack/prompts'
 import { Octokit } from '@octokit/rest'
 import { execa } from 'execa'
 import findVersions from 'find-versions'
+import isOnline from 'is-online'
 import keytar from 'keytar-forked'
 import { log } from 'lognow'
 import { createWriteStream } from 'node:fs'
@@ -405,6 +406,16 @@ export async function updateApplicationFromGitHubRelease(
  * @public
  */
 export async function updateAllApplications(config: ItsonConfig) {
+	if (!config.applications.some((application) => application.update !== undefined)) {
+		log.info('No applications have defined update strategies. Skipping application updates.')
+		return
+	}
+
+	if (!(await isOnline({ timeout: 60_000 }))) {
+		log.error('No internet access detected. Skipping application updates.')
+		return
+	}
+
 	for (const application of config.applications) {
 		if (application.update !== undefined) {
 			if (application.update.type === 'github') {

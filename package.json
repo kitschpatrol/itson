@@ -47,6 +47,7 @@
 		"@types/yargs": "^17.0.34",
 		"bumpp": "^10.3.1",
 		"find-versions": "^6.0.0",
+		"is-online": "^12.0.1",
 		"lognow": "^0.3.0",
 		"mdat-plugin-cli-help": "^1.0.1",
 		"minimatch": "^10.1.1",
