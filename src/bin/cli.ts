@@ -2,8 +2,8 @@
 
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { log, setDefaultLogOptions } from 'lognow'
-import { version } from '../../package.json'
+import { log, setDefaultLogOptions, getJsonFileTransportDestinations } from 'lognow'
+import { version, name } from '../../package.json'
 import { updateAllApplications } from '../lib/commands/update'
 import { loadConfig } from 'c12'
 import { ItsonConfig } from '../lib/config'
@@ -14,8 +14,12 @@ import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
 import { uploadAllApplicationLogs } from '../lib/commands/log-upload'
 
+setDefaultLogOptions({ name, logJsonToFile: true })
+
+log.getLoggerInstance('')
+
 // Config
-const { config, configFile, source, cwd } = await loadConfig<ItsonConfig>({
+const { config, configFile } = await loadConfig<ItsonConfig>({
 	name: 'itson',
 	cwd: os.homedir(), // rcfile search in home dir doesn't seem to work...
 	globalRc: true,
@@ -34,6 +38,9 @@ await yargsInstance
 	.middleware((argv) => {
 		// Set console level globally based on verbose flag
 		setDefaultLogOptions({ verbose: argv.verbose })
+
+		log.debug('Verbose logging enabled')
+		log.debug(`Logging to file: "${getJsonFileTransportDestinations().at(0)}"`)
 	})
 	.command(
 		['$0', 'launch'],

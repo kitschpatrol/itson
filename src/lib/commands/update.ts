@@ -1,9 +1,10 @@
 // @case-police-ignore Api
+import { text } from '@clack/prompts'
 import { Octokit } from '@octokit/rest'
-import { log } from 'lognow'
 import { execa } from 'execa'
 import findVersions from 'find-versions'
 import keytar from 'keytar-forked'
+import { log } from 'lognow'
 import { createWriteStream } from 'node:fs'
 import { mkdir, rename, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -14,7 +15,6 @@ import semver from 'semver'
 import type { ItsonConfig } from '../../lib/config.js'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { getVersion, unzip } from '../../lib/utilities.js'
-import { text } from '@clack/prompts'
 
 const GITHUB_PAT_ACCOUNT = 'github-pat'
 
@@ -381,8 +381,7 @@ export async function updateApplicationFromGitHubRelease(
 	log.info(
 		`${action} release version: ${release.version}${versionConstraint ? ` (satisfies ${versionConstraint})` : ''}`,
 	)
-	log.debug('Release artifacts:')
-	log.debug(filteredArtifacts)
+	log.withMetadata(filteredArtifacts).debug('Release artifacts:')
 
 	const pat = await getGitHubPat()
 	if (pat) {

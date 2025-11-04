@@ -1,5 +1,5 @@
-import { log } from 'lognow'
 import keytar from 'keytar-forked'
+import { log } from 'lognow'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { unregisterAll } from '../service'
 

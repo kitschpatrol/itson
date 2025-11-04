@@ -1,5 +1,5 @@
-import { log } from 'lognow'
 import { execa } from 'execa'
+import { log } from 'lognow'
 import { glob, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'

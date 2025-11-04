@@ -2,8 +2,9 @@
 // TODO revisit client-s3 version
 // Currently pinned to 3.893.0 because of issues in another project, which might not apply here
 import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { log } from 'lognow'
+import { text } from '@clack/prompts'
 import keytar from 'keytar-forked'
+import { log } from 'lognow'
 import { minimatch } from 'minimatch'
 import { createHash } from 'node:crypto'
 import { createReadStream, statSync } from 'node:fs'
@@ -11,7 +12,6 @@ import { readdir } from 'node:fs/promises'
 import { basename, join, relative, sep } from 'node:path'
 import type { ItsonLogUploadStrategyS3 } from './config'
 import { KEYCHAIN_SERVICE } from '../lib/constants.js' // Adjust path as needed
-import { text } from '@clack/prompts'
 
 /**
  * Glob patterns for files to ignore during log upload
@@ -178,7 +178,7 @@ export class S3FolderSync {
 			log.info(`- Skipped: ${skippedCount} files`)
 			log.info(`- Remote files preserved: ${remoteFiles.size - uploadedCount} files`)
 		} catch (error) {
-			log.error('Sync failed:', error)
+			log.withError(error).error('Sync failed:')
 			throw error
 		}
 	}

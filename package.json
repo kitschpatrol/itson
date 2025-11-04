@@ -22,7 +22,7 @@
 	},
 	"type": "module",
 	"bin": {
-		"itson": "dist/cli.js"
+		"itson": "dist/cli.mjs"
 	},
 	"scripts": {
 		"build": "tsdown ./src/bin/cli.ts",
@@ -35,24 +35,23 @@
 	"dependencies": {
 		"c12": "^3.3.1",
 		"execa": "^9.6.0",
-		"keytar-forked": "^7.10.0",
-		"std-env": "^3.10.0"
+		"keytar-forked": "^7.10.0"
 	},
 	"devDependencies": {
 		"@aws-sdk/client-s3": "3.893.0",
 		"@clack/prompts": "^0.11.0",
-		"@kitschpatrol/shared-config": "^5.7.4",
+		"@kitschpatrol/shared-config": "^5.8.1",
 		"@octokit/rest": "^22.0.1",
-		"@types/node": "^22.18.13",
+		"@types/node": "^22.19.0",
 		"@types/semver": "^7.7.1",
 		"@types/yargs": "^17.0.34",
 		"bumpp": "^10.3.1",
 		"find-versions": "^6.0.0",
-		"lognow": "^0.1.0",
+		"lognow": "^0.3.0",
+		"mdat-plugin-cli-help": "^1.0.1",
 		"minimatch": "^10.1.1",
-		"pkg-types": "^2.3.0",
 		"semver": "^7.7.3",
-		"tsdown": "^0.15.12",
+		"tsdown": "^0.16.0",
 		"typescript": "~5.9.3",
 		"yargs": "^18.0.0"
 	},

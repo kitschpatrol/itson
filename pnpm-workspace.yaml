@@ -2,5 +2,4 @@ onlyBuiltDependencies:
   - esbuild
   - keytar-forked
   - oxc-resolver
-  - puppeteer
   - unrs-resolver

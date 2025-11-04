@@ -1,5 +1,5 @@
-import { log } from 'lognow'
 import { execa } from 'execa'
+import { log } from 'lognow'
 import { readFile, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 

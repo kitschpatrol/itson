@@ -105,36 +105,6 @@ Private GitHub repositories are supported via personal access tokens bearing at 
 
 <!-- mdat:cli-help {depth: 1} -->
 
-#### Command: `itson`
-
-Run an itson command.
-
-If no command is provided, `itson launch` is run by default.
-
-Usage:
-
-```txt
-itson [command]
-```
-
-| Command       | Description                                                                                                               |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `launch`      | Update, register, and start all managed applications. Applications will auto-restart if they crash. _(Default command.)_  |
-| `start`       | Start all managed applications. Applications will auto-restart if they crash.                                             |
-| `stop`        | Stop all managed applications.                                                                                            |
-| `update`      | Update all managed applications to the latest available versions.                                                         |
-| `upload-logs` | Upload all application logs to the configured S3 bucket.                                                                  |
-| `register`    | Register itson with the system according to the config file. Optionally run this after changing state in the config file. |
-| `reset`       | Clear any credentials stored in the system keychain, and remove any registered services.                                  |
-
-| Option              | Description              | Type      |
-| ------------------- | ------------------------ | --------- |
-| `--verbose`         | Run with verbose logging | `boolean` |
-| `--help`<br>`-h`    | Show help                | `boolean` |
-| `--version`<br>`-v` | Show version number      | `boolean` |
-
-<!-- /mdat:cli-help -->
-
 ## Background
 
 ### Alternatives
