@@ -117,6 +117,7 @@ export async function deleteFileSafe(path: string): Promise<boolean> {
 
 /**
  * Check if the internet is reachable and DNS is working.
+ * Currently using is-online instead of this function.
  * @returns True if the internet is reachable, false otherwise.
  * @public
  */

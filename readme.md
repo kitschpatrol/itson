@@ -62,6 +62,12 @@ Installing Python application packages requires [uv](https://docs.astral.sh/uv/)
 npm install --global itson
 ```
 
+### Updating
+
+```sh
+npm update --global itson
+```
+
 ## Usage
 
 Create a configuration file as described below, and then invoke `itson` to update the system to reflect your configuration, check for and install any application updates, and then immediately launch any specified applications.
@@ -100,6 +106,8 @@ An optional `update` strategy may be specified.
 Currently, only updates from GitHub releases containing Python application packages or attached binary artifacts are supported.
 
 Private GitHub repositories are supported via personal access tokens bearing at least the `contents:read` and `metadata:read` permissions.
+
+Itson works offline, but certain operations (log uploading, application updates) will be skipped after a (generous) timeout.
 
 ### Commands
 
