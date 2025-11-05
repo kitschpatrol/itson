@@ -24,6 +24,9 @@
 	"bin": {
 		"itson": "dist/cli.mjs"
 	},
+	"files": [
+		"dist/*"
+	],
 	"scripts": {
 		"build": "tsdown ./src/bin/cli.ts",
 		"clean": "git rm -f pnpm-lock.yaml ; git clean -fdX",
