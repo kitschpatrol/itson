@@ -49,8 +49,8 @@ importers:
         specifier: ^12.0.1
         version: 12.0.1
       lognow:
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.3.1
+        version: 0.3.1
       mdat-plugin-cli-help:
         specifier: ^1.0.1
         version: 1.0.1(mdat@1.2.0(typescript@5.9.3))(remark-mdat@1.1.2)
@@ -3231,8 +3231,8 @@ packages:
     resolution: {integrity: sha512-39FT5avMkp4DrbI8hlx98xYYhrnEARNH4pqzxiBiblflS/UByA92UV6b9yIxgT4bcWml2KoLn+TV89EC/zfZug==}
     engines: {node: '>=18'}
 
-  lognow@0.3.0:
-    resolution: {integrity: sha512-Vk9eMoIUWREQ+r4F+78VezyJDJaHlxZVqGsV11JOvzC31iNQ3aef2Tq/MTpNDhoitF6zO6l4671TyUPU+7rEnA==}
+  lognow@0.3.1:
+    resolution: {integrity: sha512-G8ZvcwasOW3EzICrstzht/GWkSOcJslxF5OGb2soAFdsGO+/qhNh6VuPyX1vxhZTOTxh2kxeHrXuKIuH1Mm/7g==}
     engines: {node: '>=20.19.0'}
 
   longest-streak@3.1.0:
@@ -9034,7 +9034,7 @@ snapshots:
       '@loglayer/shared': 2.6.0
       '@loglayer/transport': 2.3.5
 
-  lognow@0.3.0:
+  lognow@0.3.1:
     dependencies:
       '@types/node': 20.19.24
       loglayer: 7.1.0
