@@ -55,13 +55,37 @@ export type ItsonConfigApplication = {
 	update?: ItsonUpdateStrategyGitHub | ItsonUpdateStrategyGitHubPython
 }
 
+export const DEFAULT_ITSON_CONFIG = {
+	applications: [],
+	offline: false,
+	runOnStartup: false,
+	verbose: false,
+}
+
 /**
  * @public
  */
 export type ItsonConfig = {
+	/**
+	 * Applications to manage and keep running persistently.
+	 * @default []
+	 */
 	applications: ItsonConfigApplication[]
-	// TODO more stuff
+	/**
+	 * Don't wait around for internet access, skip operations that require it.
+	 * @default false
+	 */
+	offline: boolean
+	/**
+	 * Register itson to run on startup.
+	 * @default false
+	 */
 	runOnStartup: boolean
+	/**
+	 * Run with verbose logging.
+	 * @default false
+	 */
+	verbose: boolean
 }
 
 /**

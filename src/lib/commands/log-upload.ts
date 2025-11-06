@@ -38,6 +38,11 @@ export async function uploadApplicationLogs(application: ItsonConfigApplication)
  * Upload all application logs
  */
 export async function uploadAllApplicationLogs(config: ItsonConfig) {
+	if (config.offline) {
+		log.info('Skipping application log uploads in offline mode')
+		return
+	}
+
 	log.info('Uploading all application logs')
 
 	// Do any applications have non-undefined log upload strategies?

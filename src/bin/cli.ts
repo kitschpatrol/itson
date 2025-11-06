@@ -6,7 +6,7 @@ import { log, setDefaultLogOptions, getJsonFileTransportDestinations } from 'log
 import { version, name } from '../../package.json'
 import { updateAllApplications } from '../lib/commands/update'
 import { loadConfig } from 'c12'
-import { ItsonConfig } from '../lib/config'
+import { ItsonConfig, DEFAULT_ITSON_CONFIG } from '../lib/config'
 import { startAllApplications } from '../lib/commands/start'
 import os from 'os'
 import { stopAllApplications } from '../lib/commands/stop'
@@ -21,6 +21,7 @@ const { config, configFile } = await loadConfig<ItsonConfig>({
 	name: 'itson',
 	cwd: os.homedir(), // rcfile search in home dir doesn't seem to work...
 	globalRc: true,
+	defaultConfig: DEFAULT_ITSON_CONFIG,
 })
 
 const yargsInstance = yargs(hideBin(process.argv))
@@ -30,15 +31,29 @@ await yargsInstance
 	.scriptName('itson')
 	.usage('$0 [command]', 'Run an itson command.')
 	.option('verbose', {
-		description: 'Run with verbose logging',
+		description: 'Run with verbose logging. Overrides the config file.',
+		type: 'boolean',
+	})
+	.option('offline', {
+		description: 'Skip operations that require internet access. Overrides the config file.',
 		type: 'boolean',
 	})
 	.middleware((argv) => {
+		// Override config file values with command line options
+		if (argv.offline !== undefined) {
+			config.offline = argv.offline
+		}
+
+		if (argv.verbose !== undefined) {
+			config.verbose = argv.verbose
+		}
+
 		// Set console level globally based on verbose flag
 		setDefaultLogOptions({ verbose: argv.verbose })
 
 		log.debug('Verbose logging enabled')
 		log.debug(`Logging to file: "${getJsonFileTransportDestinations().at(0)}"`)
+		log.withMetadata({ config }).debug('Loaded config:')
 	})
 	.command(
 		['$0', 'launch'],

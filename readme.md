@@ -135,11 +135,12 @@ itson [command]
 | `register`    | Register itson with the system according to the config file. Optionally run this after changing state in the config file. |
 | `reset`       | Clear any credentials stored in the system keychain, and remove any registered services.                                  |
 
-| Option              | Description              | Type      |
-| ------------------- | ------------------------ | --------- |
-| `--verbose`         | Run with verbose logging | `boolean` |
-| `--help`<br>`-h`    | Show help                | `boolean` |
-| `--version`<br>`-v` | Show version number      | `boolean` |
+| Option              | Description                                                              | Type      |
+| ------------------- | ------------------------------------------------------------------------ | --------- |
+| `--verbose`         | Run with verbose logging. Overrides the config file.                     | `boolean` |
+| `--offline`         | Skip operations that require internet access. Overrides the config file. | `boolean` |
+| `--help`<br>`-h`    | Show help                                                                | `boolean` |
+| `--version`<br>`-v` | Show version number                                                      | `boolean` |
 
 <!-- /mdat:cli-help -->
 

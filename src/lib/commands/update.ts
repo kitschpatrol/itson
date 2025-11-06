@@ -109,12 +109,8 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 
 /**
  * Get the latest release info from a GitHub repository
- * @public
  */
-export async function getLatestRelease(
-	owner: string,
-	repo: string,
-): Promise<GitHubRelease | undefined> {
+async function getLatestRelease(owner: string, repo: string): Promise<GitHubRelease | undefined> {
 	const pat = await getGitHubPat()
 	if (!pat) {
 		return
@@ -406,6 +402,11 @@ export async function updateApplicationFromGitHubRelease(
  * @public
  */
 export async function updateAllApplications(config: ItsonConfig) {
+	if (config.offline) {
+		log.info('Skipping application updates in offline mode')
+		return
+	}
+
 	if (!config.applications.some((application) => application.update !== undefined)) {
 		log.info('No applications have defined update strategies. Skipping application updates.')
 		return
