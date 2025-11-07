@@ -74,6 +74,7 @@ await yargsInstance
 		'Start all managed applications. Applications will auto-restart if they crash.',
 		() => {},
 		async () => {
+			await register(config)
 			await startAllApplications(config)
 		},
 	)
@@ -82,6 +83,7 @@ await yargsInstance
 		'Stop all managed applications.',
 		() => {},
 		async () => {
+			await register(config)
 			await stopAllApplications(config)
 		},
 	)
@@ -90,6 +92,7 @@ await yargsInstance
 		'Update all managed applications to the latest available versions.',
 		() => {},
 		async () => {
+			await register(config)
 			await updateAllAppsAndTasks(config)
 		},
 	)
@@ -98,6 +101,7 @@ await yargsInstance
 		'Upload all application logs to the configured S3 bucket.',
 		() => {},
 		async () => {
+			await register(config)
 			await uploadAllLogs(config)
 		},
 	)
