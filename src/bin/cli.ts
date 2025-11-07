@@ -89,7 +89,7 @@ await yargsInstance
 	)
 	.command(
 		'update',
-		'Update all managed applications to the latest available versions.',
+		'Update all managed applications and tasks to the latest available versions.',
 		() => {},
 		async () => {
 			await register(config)
@@ -98,7 +98,7 @@ await yargsInstance
 	)
 	.command(
 		'upload-logs',
-		'Upload all application logs to the configured S3 bucket.',
+		'Upload all application and task logs to the configured S3 bucket.',
 		() => {},
 		async () => {
 			await register(config)

@@ -97,6 +97,14 @@ export default {
       name: 'Interpose',
     },
   ],
+  tasks: [
+    {
+      arguments: ['Itson is on task!'],
+      command: 'say',
+      name: 'Say',
+      schedule: '0 * * * *',
+    },
+  ],
   runOnStartup: true,
 }
 ```
@@ -107,7 +115,11 @@ Currently, only updates from GitHub releases containing Python application packa
 
 Private GitHub repositories are supported via personal access tokens bearing at least the `contents:read` and `metadata:read` permissions.
 
-Itson works offline, but certain operations (log uploading, application updates) will be skipped after a (generous) timeout.
+Itson works offline, but certain operations (log uploading, application updates) will be skipped after a (generous) timeout. (Or, use the `--offline` flag to skip these operations immediately.)
+
+"Applications" start whenever `itson` is run, and then run forever and restart automatically if they are closed or crash.
+
+"Tasks" run once at the specified time and then exit.
 
 ### Commands
 
@@ -130,8 +142,8 @@ itson [command]
 | `launch`      | Update, register, and start all managed applications. Applications will auto-restart if they crash. _(Default command.)_  |
 | `start`       | Start all managed applications. Applications will auto-restart if they crash.                                             |
 | `stop`        | Stop all managed applications.                                                                                            |
-| `update`      | Update all managed applications to the latest available versions.                                                         |
-| `upload-logs` | Upload all application logs to the configured S3 bucket.                                                                  |
+| `update`      | Update all managed applications and tasks to the latest available versions.                                               |
+| `upload-logs` | Upload all application and task logs to the configured S3 bucket.                                                         |
 | `register`    | Register itson with the system according to the config file. Optionally run this after changing state in the config file. |
 | `reset`       | Clear any credentials stored in the system keychain, and remove any registered services.                                  |
 
