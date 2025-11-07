@@ -5,6 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import type { ItsonConfigApplication } from './config'
 import { deleteFileSafe, readFileSafe } from './utilities'
+import { createApplicationPlist } from './utilities/plist-builder'
 
 function getServiceLabel(appName: string) {
 	return `com.itson.${appName}`
@@ -49,51 +50,15 @@ export async function startService(
 	// Use the invoking user's PATH to ensure the service can find node and such...
 	const { stdout: userPath } = await execa('echo $PATH', { shell: true })
 
-	const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-  <dict>
-    <key>Label</key>
-    <string>${label}</string>
-    <key>ProgramArguments</key>
-    <array>
-			<string>/usr/bin/env</string>
-      <string>${application.command}</string>
-      ${application.arguments?.map((arg) => `<string>${arg}</string>`).join('\n')}
-    </array>
-    <key>EnvironmentVariables</key>
-    <dict>
-      <key>PATH</key>
-      <string>${userPath}</string>
-      <key>NODE_ENV</key>
-      <string>production</string>
-    </dict>		
-    <key>RunAtLoad</key>
-    ${runOnStartup ? '<true/>' : '<false/>'}
-    <key>KeepAlive</key>
-    ${
-			keepAlive
-				? `<dict>
-      <key>SuccessfulExit</key>
-      <true/>
-      <key>Crashed</key>
-      <true/>			
-      <key>AfterInitialDemand</key>
-      <true/>
-    </dict>`
-				: '<false/>'
-		}		
-    <key>SessionCreate</key>
-    <false/>
-    <key>LimitLoadToSessionType</key>
-    <string>Aqua</string>
-    <key>StandardOutPath</key>
-    <string>/tmp/${label}.out.log</string>
-    <key>StandardErrorPath</key>
-    <string>/tmp/${label}.err.log</string>
-  </dict>
-</plist>
-`
+	const plistContent = createApplicationPlist({
+		arguments: application.arguments,
+		command: application.command,
+		keepAlive,
+		label,
+		logDirectoryPath: '/tmp', // TODO expose?
+		runOnStartup,
+		userPath,
+	})
 
 	const { isLoaded, isRunning } = await getServiceState(label)
 
