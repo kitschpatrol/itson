@@ -32,7 +32,7 @@ Itson helps you install, update, and run your bespoke privately-distributed appl
 Itson does the following each time it runs:
 
 1. **Read** a configuration file and **register** any new configuration settings with the operating system. \
-   _For now, this amounts to scheduling itson's own launch on future startups._
+   _For now, this amounts to scheduling itson's own launch on future startups and registering any scheduled tasks specified in the configuration._
 
 2. **Check** for available updates to exhibit applications, prompting for credentials if necessary. \
    _For now, this is limited to checking for new releases on GitHub, and follows [semver](https://semver.org/) rules. The latest release is selected by default, or a semver-compatible version constraint or range may be specified in the application's configuration. GitHub credentials are requested interactively as needed and securely stored for subsequent use._
@@ -169,11 +169,12 @@ Itson is responsible for the following:
 - Securely storing credentials required for updates
 - Ensuring that exhibit application software restarts automatically in the event of a crash
 - Uploading log files to S3
+- Scheduling short-running tasks using cron syntax
 
 Itson is currently **not** concerned with the following:
 
-- Scheduling
 - Automatic rollback (Though manual rollback can be accomplished by pinning a specific version in the `itson.config.js` file.)
+- Crash reporting (I'm handling this via log uploads and remote analysis.)
 
 ### Development notes
 
@@ -191,6 +192,7 @@ Though the tool itself is written in TypeScript, the actual functionality is pro
 - [svcinstall](https://github.com/bryanmacfarlane/svcinstall) (cross-platform)
 - [npm-launchctl-helper](https://github.com/alex-kostirin/npm-launchctl-helper)
 - [launchd.info](https://launchd.info/)
+- [node-launchd.plist](https://evanlucas.com/node-launchd.plist/)
 - Agents: `~/Library/LaunchAgents/`
 - Logs: `/tmp/`
 - Interesting precedent: [node-mac](https://github.com/coreybutler/node-mac), [node-windows](https://github.com/coreybutler/node-windows), [node-linux](https://github.com/coreybutler/node-linux).
@@ -198,6 +200,7 @@ Though the tool itself is written in TypeScript, the actual functionality is pro
 #### Cron
 
 - [cronstrue](https://www.npmjs.com/package/cronstrue)
+- [cron to launchd python program](https://github.com/randomn4me/crontab-to-launchd)
 
 #### Keychain
 

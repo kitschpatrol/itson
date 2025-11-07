@@ -33,7 +33,7 @@
 		"fix": "ksc fix",
 		"lint": "ksc lint",
 		"release": "bumpp --commit 'Release: %s' && pnpm run build && NPM_AUTH_TOKEN=$(op read 'op://Personal/npm/token') && pnpm publish",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "vitest"
 	},
 	"dependencies": {
 		"c12": "^3.3.1",
@@ -45,18 +45,24 @@
 		"@clack/prompts": "^0.11.0",
 		"@kitschpatrol/shared-config": "^5.8.1",
 		"@octokit/rest": "^22.0.1",
+		"@plist/plist": "^1.0.0",
 		"@types/node": "^22.19.0",
+		"@types/plist": "^3.0.5",
 		"@types/semver": "^7.7.1",
 		"@types/yargs": "^17.0.34",
 		"bumpp": "^10.3.1",
+		"cron-parser": "^5.4.0",
+		"cronstrue": "^3.9.0",
 		"find-versions": "^6.0.0",
 		"is-online": "^12.0.1",
 		"lognow": "^0.3.1",
 		"mdat-plugin-cli-help": "^1.0.2",
 		"minimatch": "^10.1.1",
+		"plist": "^3.1.0",
 		"semver": "^7.7.3",
 		"tsdown": "^0.16.0",
 		"typescript": "~5.9.3",
+		"vitest": "^4.0.7",
 		"yargs": "^18.0.0"
 	},
 	"packageManager": "pnpm@10.20.0",

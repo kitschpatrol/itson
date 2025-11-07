@@ -45,13 +45,24 @@ export type ItsonLogUploadStrategyS3 = {
 }
 
 /**
- * @public
+ * Base task configuration, specialized into schedule task and application task
+ * configurations.
  */
-export type ItsonConfigApplication = {
+export type ItsonConfigTask = {
 	arguments?: string[]
 	command: string
-	logUpload?: ItsonLogUploadStrategyS3
 	name: string
+}
+
+export type ItsonConfigScheduledTask = ItsonConfigTask & {
+	schedule: string
+}
+
+/**
+ * @public
+ */
+export type ItsonConfigApplication = ItsonConfigTask & {
+	logUpload?: ItsonLogUploadStrategyS3
 	update?: ItsonUpdateStrategyGitHub | ItsonUpdateStrategyGitHubPython
 }
 
@@ -81,6 +92,11 @@ export type ItsonConfig = {
 	 * @default false
 	 */
 	runOnStartup: boolean
+	/**
+	 * Scheduled tasks to run at specified times.
+	 * @default []
+	 */
+	scheduledTasks: ItsonConfigScheduledTask[]
 	/**
 	 * Run with verbose logging.
 	 * @default false
