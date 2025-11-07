@@ -7,9 +7,21 @@
  * on existing libraries for cron parsing and plist manipulation.
  */
 
-import type plist from 'plist'
 import { CronExpressionParser } from 'cron-parser'
 import cronstrue from 'cronstrue'
+
+// Needs a discriminated union or something, but good enough...
+export type LaunchdPlistFragment = {
+	RunAtLoad?: boolean
+	StartCalendarInterval?: Array<{
+		Day?: number
+		Hour?: number
+		Minute?: number
+		Month?: number
+		Weekday?: number
+	}>
+	StartInterval?: number
+}
 
 /**
  * Convert a cron string to a functionally equivalent launchd plist fragment
@@ -33,7 +45,7 @@ import cronstrue from 'cronstrue'
  * @throws {Error} if the cron string can't be parsed or is unsupported by launchd
  * @returns the launchd plist fragment
  */
-export function cronToPlistFragment(cronString: string): plist.PlistValue {
+export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 	// Special case, not supported by cron-parser, but supported by launchd
 	if (cronString.trim() === '@reboot') {
 		return {
@@ -144,6 +156,11 @@ export function cronToPlistFragment(cronString: string): plist.PlistValue {
 			}
 		}
 
+		// All numbers
+		if (!serializedFields.minute.values.every((value) => typeof value === 'number')) {
+			throw new Error(`Minute values must be numbers: ${serializedFields.minute.values.join(', ')}`)
+		}
+
 		fieldsToCreate = {
 			Minute: serializedFields.minute.values,
 		}
@@ -165,7 +182,7 @@ export function cronToPlistFragment(cronString: string): plist.PlistValue {
 	}
 
 	// Build the permutations
-	const startCalendarIntervalArray: plist.PlistValue[] = []
+	const startCalendarIntervalArray: LaunchdPlistFragment['StartCalendarInterval'] = []
 
 	for (let i = 0; i < permutations; i++) {
 		const startCalendarIntervalItem: Record<string, number> = {}
@@ -173,7 +190,7 @@ export function cronToPlistFragment(cronString: string): plist.PlistValue {
 		for (const [field, values] of Object.entries(fieldsToCreate)) {
 			const value = values[i % values.length]
 			if (typeof value !== 'number') {
-				throw new TypeError(`Field ${field} is not a number: ${value}`)
+				throw new TypeError(`Field ${field} is not a number`)
 			}
 			startCalendarIntervalItem[field] = value
 		}
@@ -193,6 +210,7 @@ export function cronToPlistFragment(cronString: string): plist.PlistValue {
 /**
  * Get a human-readable description of a cron string.
  * @param cronString - The cron string to describe.
+ * @public
  * @returns A human-readable description of the cron string, or the original
  * string if it can't be parsed or described.
  */

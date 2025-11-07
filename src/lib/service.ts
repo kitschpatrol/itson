@@ -3,12 +3,13 @@ import { log } from 'lognow'
 import { glob, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import type { ItsonConfigApplication } from './config'
+import type { ItsonConfig, ItsonConfigApplication, ItsonConfigTask } from './config'
+import { isApplication, isTask } from './config'
 import { deleteFileSafe, readFileSafe } from './utilities'
 import { createApplicationPlist } from './utilities/plist-builder'
 
-function getServiceLabel(appName: string) {
-	return `com.itson.${appName}`
+function getServiceLabel(item: ItsonConfigApplication | ItsonConfigTask): string {
+	return `com.itson.${isTask(item) ? 'task' : 'app'}.${item.name}`
 }
 
 function getGuiDomain() {
@@ -27,22 +28,19 @@ async function getServiceState(label: string): Promise<{ isLoaded: boolean; isRu
 }
 
 /**
- * On macOS, register a service with launchd which will keep an application running once launched.
+ * On macOS, register a service with launchd.
+ * Applications start immediately and will keep running.
+ * Tasks start on schedule and will run once and then stop. They will not run immediately.
  * @public
  */
-export async function startService(
-	application: ItsonConfigApplication,
-	runOnStartup = false,
-	runNow = false,
-	keepAlive = true,
-) {
+export async function startService(appOrTask: ItsonConfigApplication | ItsonConfigTask) {
 	if (process.platform !== 'darwin') {
 		throw new Error('Daemonization is currently only supported on macOS.')
 	}
 
-	log.info(`Starting service for ${application.name}`)
+	log.info(`Starting service for ${appOrTask.name}`)
 
-	const label = getServiceLabel(application.name)
+	const label = getServiceLabel(appOrTask)
 	const guiDomain = getGuiDomain()
 
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
@@ -51,12 +49,12 @@ export async function startService(
 	const { stdout: userPath } = await execa('echo $PATH', { shell: true })
 
 	const plistContent = createApplicationPlist({
-		arguments: application.arguments,
-		command: application.command,
-		keepAlive,
+		arguments: appOrTask.arguments,
+		command: appOrTask.command,
+		keepAlive: isApplication(appOrTask),
 		label,
 		logDirectoryPath: '/tmp', // TODO expose?
-		runOnStartup,
+		schedule: appOrTask.schedule,
 		userPath,
 	})
 
@@ -96,7 +94,9 @@ export async function startService(
 			await execa('launchctl', ['bootstrap', guiDomain, plistPath])
 		}
 
-		if (runNow) {
+		// Applications start immediately and will keep running.
+		// Tasks don't!
+		if (isApplication(appOrTask)) {
 			if (isRunning) {
 				log.info(`Service ${label} is already running, not starting again.`)
 			} else {
@@ -110,6 +110,35 @@ export async function startService(
 		)
 		throw error
 	}
+}
+
+/**
+ * Unregister any "orphaned" launchd services that are not in the config.
+ * @public
+ */
+export async function unregisterOrphans(config: ItsonConfig): Promise<number> {
+	const plistPaths = await getAllPlistPaths()
+
+	const activePlistNames = new Set([
+		getServiceLabel(itsonTask),
+		...config.applications.map((application) => getServiceLabel(application)),
+		...config.tasks.map((task) => getServiceLabel(task)),
+	])
+
+	const guiDomain = getGuiDomain()
+
+	let deleteCount = 0
+	for (const plistPath of plistPaths) {
+		const plistName = path.basename(plistPath, '.plist')
+		if (!activePlistNames.has(plistName)) {
+			await execa('launchctl', ['bootout', `${guiDomain}/${plistName}`], { reject: false })
+			await deleteFileSafe(plistPath)
+			log.info(`Unloaded orphaned launchd service from ${plistPath}`)
+			deleteCount++
+		}
+	}
+
+	return deleteCount
 }
 
 async function getAllPlistPaths(): Promise<string[]> {
@@ -144,57 +173,42 @@ export async function unregisterAll() {
 }
 
 /**
- * Unregister an application
+ * Unregister an application stops the service and removes the plist file
  * @public
  */
-export async function unregisterApp(application: ItsonConfigApplication) {
-	const label = getServiceLabel(application.name)
-	const guiDomain = getGuiDomain()
+export async function unregisterService(appOrTask: ItsonConfigApplication | ItsonConfigTask) {
+	await stopService(appOrTask)
+	const label = getServiceLabel(appOrTask)
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
-	await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 	await deleteFileSafe(plistPath)
-}
-
-/**
- * Start an application now, and keep it running. Does not run itself directly at startup, but will be by itson after updates if itson is registered to start on startup.
- */
-export async function startApp(application: ItsonConfigApplication) {
-	await startService(application, false, true, true)
 }
 
 /**
  * Stop an application
  */
-export async function stopApp(application: ItsonConfigApplication) {
-	const label = getServiceLabel(application.name)
+export async function stopService(application: ItsonConfigApplication | ItsonConfigTask) {
+	const label = getServiceLabel(application)
 	const guiDomain = getGuiDomain()
 	await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 }
 
-const itsonApp: ItsonConfigApplication = {
+const itsonTask: ItsonConfigTask = {
 	arguments: [],
 	command: 'itson',
 	name: 'Itson',
+	schedule: '@reboot',
 }
 
 /**
  * Register itson to run on startup.
  */
 export async function registerItson() {
-	await startService(itsonApp, true, false, false)
+	await startService(itsonTask)
 }
 
 /**
  * Unregister itson
  */
 export async function unregisterItson() {
-	await unregisterApp(itsonApp)
-}
-
-/**
- * Run itson now. (Testing only...)
- * @public
- */
-export async function runItson() {
-	await startService(itsonApp, true, true, false)
+	await unregisterService(itsonTask)
 }

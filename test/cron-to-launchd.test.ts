@@ -1,21 +1,9 @@
 // Tests adapted from https://github.com/randomn4me/crontab-to-launchd
 
-/* eslint-disable ts/naming-convention */
 import plist from 'plist'
 import { describe, expect, it } from 'vitest'
+import type { LaunchdPlistFragment } from '../src/lib/utilities/cron-to-launchd'
 import { cronToPlistFragment } from '../src/lib/utilities/cron-to-launchd'
-
-type LaunchdPlistFragment = {
-	RunAtLoad?: boolean
-	StartCalendarInterval?: Array<{
-		Day?: number
-		Hour?: number
-		Minute?: number
-		Month?: number
-		Weekday?: number
-	}>
-	StartInterval?: number
-}
 
 /**
  * Helper to parse crontab and generate XML
@@ -23,8 +11,8 @@ type LaunchdPlistFragment = {
 function parseAndGenerate(crontabExpr: string): [LaunchdPlistFragment, string] {
 	const entry = cronToPlistFragment(crontabExpr)
 	const xmlOutput = plist.build(entry)
-	// eslint-disable-next-line ts/no-unsafe-type-assertion
-	return [entry as LaunchdPlistFragment, xmlOutput]
+
+	return [entry, xmlOutput]
 }
 
 /**
@@ -83,7 +71,7 @@ describe('ComprehensivePatterns', () => {
 			for (const [cronExpr, expectedIntervals] of testCases) {
 				const [entry, xml] = parseAndGenerate(cronExpr)
 
-				expect([0, 30, 59]).toContain(entry.StartCalendarInterval![0].Minute!)
+				expect([0, 30, 59]).toContain(entry.StartCalendarInterval![0].Minute)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -147,7 +135,7 @@ describe('ComprehensivePatterns', () => {
 
 			for (const [cronExpr, expectedIntervals] of testCases) {
 				const [entry, xml] = parseAndGenerate(cronExpr)
-				expect([0, 12, 23]).toContain(entry.StartCalendarInterval![0].Hour!)
+				expect([0, 12, 23]).toContain(entry.StartCalendarInterval![0].Hour)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -207,7 +195,7 @@ describe('ComprehensivePatterns', () => {
 
 			for (const [cronExpr, expectedIntervals] of testCases) {
 				const [entry, xml] = parseAndGenerate(cronExpr)
-				expect([1, 15, 31]).toContain(entry.StartCalendarInterval![0].Day!)
+				expect([1, 15, 31]).toContain(entry.StartCalendarInterval![0].Day)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -325,7 +313,7 @@ describe('ComprehensivePatterns', () => {
 
 			for (const [cronExpr, expectedIntervals] of testCases) {
 				const [entry, xml] = parseAndGenerate(cronExpr)
-				expect([0, 1, 5, 7]).toContain(entry.StartCalendarInterval![0].Weekday!)
+				expect([0, 1, 5, 7]).toContain(entry.StartCalendarInterval![0].Weekday)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})

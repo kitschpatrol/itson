@@ -1,5 +1,11 @@
+ignoredBuiltDependencies:
+  - rollup
+
 onlyBuiltDependencies:
   - esbuild
   - keytar-forked
   - oxc-resolver
   - unrs-resolver
+
+overrides:
+  normalize-package-data: ^8.0.0

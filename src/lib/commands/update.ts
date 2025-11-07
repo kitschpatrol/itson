@@ -195,7 +195,7 @@ async function getVersionFromCLI(cli: string): Promise<string | undefined> {
 	}
 }
 
-async function updateApplicationFromGitHubPythonRelease(
+async function updateFromGitHubPythonRelease(
 	owner: string,
 	repo: string,
 	cli: string,
@@ -308,11 +308,11 @@ async function downloadReleaseAsset(
 }
 
 /**
- * Update an application from a GitHub release
+ * Update an app or task from a GitHub release
  * @public
  */
 // eslint-disable-next-line complexity
-export async function updateApplicationFromGitHubRelease(
+export async function updateFromGitHubRelease(
 	owner: string,
 	repo: string,
 	destination: string,
@@ -398,34 +398,36 @@ export async function updateApplicationFromGitHubRelease(
 }
 
 /**
- * Update all applications in the config
+ * Update all apps and tasks in the config
  * @public
  */
-export async function updateAllApplications(config: ItsonConfig) {
+export async function updateAllAppsAndTasks(config: ItsonConfig) {
 	if (config.offline) {
-		log.info('Skipping application updates in offline mode')
+		log.info('Skipping app and task updates in offline mode')
 		return
 	}
 
-	if (!config.applications.some((application) => application.update !== undefined)) {
-		log.info('No applications have defined update strategies. Skipping application updates.')
+	const appsAndTasks = [...config.applications, ...config.tasks]
+
+	if (!appsAndTasks.some((appOrTask) => appOrTask.update !== undefined)) {
+		log.info('No apps or tasks have defined update strategies. Skipping app and task updates.')
 		return
 	}
 
 	if (!(await isOnline({ timeout: 60_000 }))) {
-		log.error('No internet access detected. Skipping application updates.')
+		log.error('No internet access detected. Skipping app and task updates.')
 		return
 	}
 
-	for (const application of config.applications) {
-		if (application.update !== undefined) {
-			if (application.update.type === 'github') {
-				const downloadedPaths = await updateApplicationFromGitHubRelease(
-					application.update.owner,
-					application.update.repo,
-					application.update.destination,
-					application.update.artifactPattern,
-					application.update.version,
+	for (const appOrTask of appsAndTasks) {
+		if (appOrTask.update !== undefined) {
+			if (appOrTask.update.type === 'github') {
+				const downloadedPaths = await updateFromGitHubRelease(
+					appOrTask.update.owner,
+					appOrTask.update.repo,
+					appOrTask.update.destination,
+					appOrTask.update.artifactPattern,
+					appOrTask.update.version,
 				)
 
 				for (const downloadedPath of downloadedPaths) {
@@ -437,16 +439,16 @@ export async function updateAllApplications(config: ItsonConfig) {
 							log.info(`Version of ${basename(downloadedPath)}: ${version}`)
 						}
 					} else {
-						log.error(`No downloaded path for ${application.name}`)
+						log.error(`No downloaded path for ${appOrTask.name}`)
 					}
 				}
 				// eslint-disable-next-line ts/no-unnecessary-condition
-			} else if (application.update.type === 'github-python') {
-				await updateApplicationFromGitHubPythonRelease(
-					application.update.owner,
-					application.update.repo,
-					application.command,
-					application.update.version,
+			} else if (appOrTask.update.type === 'github-python') {
+				await updateFromGitHubPythonRelease(
+					appOrTask.update.owner,
+					appOrTask.update.repo,
+					appOrTask.command,
+					appOrTask.update.version,
 				)
 			}
 		}

@@ -4,7 +4,7 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { log, setDefaultLogOptions, getJsonFileTransportDestinations } from 'lognow'
 import { version, name } from '../../package.json'
-import { updateAllApplications } from '../lib/commands/update'
+import { updateAllAppsAndTasks } from '../lib/commands/update'
 import { loadConfig } from 'c12'
 import { ItsonConfig, DEFAULT_ITSON_CONFIG } from '../lib/config'
 import { startAllApplications } from '../lib/commands/start'
@@ -12,7 +12,7 @@ import os from 'os'
 import { stopAllApplications } from '../lib/commands/stop'
 import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
-import { uploadAllApplicationLogs } from '../lib/commands/log-upload'
+import { uploadAllLogs } from '../lib/commands/log-upload'
 
 setDefaultLogOptions({ name, logJsonToFile: true })
 
@@ -64,8 +64,8 @@ await yargsInstance
 			log.info('Launching itson')
 
 			await register(config)
-			await updateAllApplications(config)
-			await uploadAllApplicationLogs(config)
+			await updateAllAppsAndTasks(config)
+			await uploadAllLogs(config)
 			await startAllApplications(config)
 		},
 	)
@@ -90,7 +90,7 @@ await yargsInstance
 		'Update all managed applications to the latest available versions.',
 		() => {},
 		async () => {
-			await updateAllApplications(config)
+			await updateAllAppsAndTasks(config)
 		},
 	)
 	.command(
@@ -98,7 +98,7 @@ await yargsInstance
 		'Upload all application logs to the configured S3 bucket.',
 		() => {},
 		async () => {
-			await uploadAllApplicationLogs(config)
+			await uploadAllLogs(config)
 		},
 	)
 	.command(

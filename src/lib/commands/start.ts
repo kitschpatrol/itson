@@ -1,6 +1,6 @@
 import { log } from 'lognow'
 import type { ItsonConfig } from '../config'
-import { startApp } from '../service'
+import { startService } from '../service'
 
 /**
  * Start all applications, default behavior
@@ -8,8 +8,8 @@ import { startApp } from '../service'
 export async function startAllApplications(config: ItsonConfig) {
 	log.info('Starting all applications')
 
-	// Start all applications
+	// Start all applications (not tasks!)
 	for (const application of config.applications) {
-		await startApp(application)
+		await startService(application)
 	}
 }

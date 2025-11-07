@@ -2,6 +2,8 @@
 // TODO separate update strategy from application
 // TODO just use brew?
 
+import type { Simplify } from 'type-fest'
+
 /**
  *
  * @public
@@ -44,32 +46,56 @@ export type ItsonLogUploadStrategyS3 = {
 	type: 's3'
 }
 
-/**
- * Base task configuration, specialized into schedule task and application task
- * configurations.
- */
-export type ItsonConfigTask = {
+type ItsonConfigBase = {
 	arguments?: string[]
 	command: string
+	logUpload?: ItsonLogUploadStrategyS3
 	name: string
+	update?: ItsonUpdateStrategyGitHub | ItsonUpdateStrategyGitHubPython
 }
 
-export type ItsonConfigScheduledTask = ItsonConfigTask & {
-	schedule: string
+export type ItsonConfigTask = Simplify<
+	ItsonConfigBase & {
+		/**
+		 * Set this to run one-off tasks instead of a persistent application.
+		 * Schedule to run the application at specified times or at `@reboot` (system startup).
+		 * If undefined, the application will run when itson is launched and be kept alive.
+		 * Uses cron syntax (with some edge-case limitations)
+		 * @default undefined
+		 */
+		schedule: string
+	}
+>
+
+/**
+ * Type guard to check if an application is a task.
+ * @public
+ */
+export function isTask(application: ItsonConfigApplication | ItsonConfigTask): boolean {
+	return typeof application.schedule === 'string'
+}
+
+/**
+ * Type guard to check if an application is an application.
+ */
+export function isApplication(application: ItsonConfigApplication | ItsonConfigTask): boolean {
+	return typeof application.schedule !== 'string'
 }
 
 /**
  * @public
  */
-export type ItsonConfigApplication = ItsonConfigTask & {
-	logUpload?: ItsonLogUploadStrategyS3
-	update?: ItsonUpdateStrategyGitHub | ItsonUpdateStrategyGitHubPython
-}
+export type ItsonConfigApplication = Simplify<
+	ItsonConfigBase & {
+		schedule: never
+	}
+>
 
 export const DEFAULT_ITSON_CONFIG = {
 	applications: [],
 	offline: false,
 	runOnStartup: false,
+	tasks: [],
 	verbose: false,
 }
 
@@ -93,10 +119,10 @@ export type ItsonConfig = {
 	 */
 	runOnStartup: boolean
 	/**
-	 * Scheduled tasks to run at specified times.
+	 * One-off tasks to run at specified times.
 	 * @default []
 	 */
-	scheduledTasks: ItsonConfigScheduledTask[]
+	tasks: ItsonConfigTask[]
 	/**
 	 * Run with verbose logging.
 	 * @default false
