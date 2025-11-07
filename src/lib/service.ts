@@ -53,7 +53,6 @@ export async function startService(appOrTask: ItsonConfigApplication | ItsonConf
 		command: appOrTask.command,
 		keepAlive: isApplication(appOrTask),
 		label,
-		logDirectoryPath: '/tmp', // TODO expose?
 		schedule: appOrTask.schedule,
 		userPath,
 	})
