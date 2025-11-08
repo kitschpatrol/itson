@@ -60,36 +60,36 @@ export async function startService(appOrTask: ItsonConfigApplication | ItsonConf
 	const { isLoaded, isRunning } = await getServiceState(label)
 
 	if (isLoaded) {
-		log.info(`Service ${label} is already loaded.`)
+		log.debug(`Service ${label} is already loaded.`)
 	} else {
-		log.info(`Service ${label} is not loaded.`)
+		log.debug(`Service ${label} is not loaded.`)
 	}
 	if (isRunning) {
-		log.info(`Service ${label} is running.`)
+		log.debug(`Service ${label} is running.`)
 	}
 
 	let isPlistChanged = false
 	const existingPlistContent = await readFileSafe(plistPath)
 	if (existingPlistContent === plistContent) {
-		log.info(`No changes to ${plistPath}`)
+		log.debug(`No changes to ${plistPath}`)
 	} else {
-		log.info(`Plist for ${label} has changed`)
+		log.debug(`Plist for ${label} has changed`)
 		isPlistChanged = true
 	}
 
 	try {
 		if (isLoaded && isPlistChanged) {
-			log.info(`Booting out service ${label} to apply changes`)
+			log.debug(`Booting out service ${label} to apply changes`)
 			await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 		}
 
 		if (isPlistChanged) {
 			await writeFile(plistPath, plistContent, 'utf8')
-			log.info(`Wrote launchd service to ${plistPath}`)
+			log.debug(`Wrote launchd service to ${plistPath}`)
 		}
 
 		if (!isLoaded || isPlistChanged) {
-			log.info('Bootstrapping service')
+			log.debug('Bootstrapping service')
 			await execa('launchctl', ['bootstrap', guiDomain, plistPath])
 		}
 
@@ -97,9 +97,9 @@ export async function startService(appOrTask: ItsonConfigApplication | ItsonConf
 		// Tasks don't!
 		if (isApplication(appOrTask)) {
 			if (isRunning) {
-				log.info(`Service ${label} is already running, not starting again.`)
+				log.debug(`Service ${label} is already running, not starting again.`)
 			} else {
-				log.info(`Starting service ${label} now`)
+				log.debug(`Starting service ${label} now`)
 				await execa('launchctl', ['kickstart', `${guiDomain}/${label}`])
 			}
 		}
@@ -132,7 +132,7 @@ export async function unregisterOrphans(config: ItsonConfig): Promise<number> {
 		if (!activePlistNames.has(plistName)) {
 			await execa('launchctl', ['bootout', `${guiDomain}/${plistName}`], { reject: false })
 			await deleteFileSafe(plistPath)
-			log.info(`Unloaded orphaned launchd service from ${plistPath}`)
+			log.debug(`Unloaded orphaned launchd service from ${plistPath}`)
 			deleteCount++
 		}
 	}
@@ -166,7 +166,7 @@ export async function unregisterAll() {
 	for (const plistFile of plistPaths) {
 		const label = path.basename(plistFile, '.plist')
 		await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
-		log.info(`Unloaded launchd service from ${plistFile}`)
+		log.debug(`Unloaded launchd service from ${plistFile}`)
 		await deleteFileSafe(plistFile)
 	}
 }

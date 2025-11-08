@@ -10,6 +10,7 @@ import { createHash } from 'node:crypto'
 import { createReadStream, statSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import { basename, join, relative, sep } from 'node:path'
+import plur from 'plur'
 import type { ItsonLogUploadStrategyS3 } from './config'
 import { KEYCHAIN_SERVICE } from '../lib/constants.js' // Adjust path as needed
 
@@ -147,14 +148,14 @@ export class S3FolderSync {
 			}
 
 			// Get all local files
-			log.info('Scanning local files...')
+			log.debug('Scanning local files...')
 			const localFiles = await this.getLocalFiles(this.config.localPath)
-			log.info(`Found ${localFiles.length} local files`)
+			log.debug(`Found ${localFiles.length} local files`)
 
 			// Get all remote files
-			log.info('Fetching remote file list...')
+			log.debug('Fetching remote file list...')
 			const remoteFiles = await this.getRemoteFiles()
-			log.info(`Found ${remoteFiles.size} remote files`)
+			log.debug(`Found ${remoteFiles.size} remote files`)
 
 			let uploadedCount = 0
 			let skippedCount = 0
@@ -168,18 +169,19 @@ export class S3FolderSync {
 					await this.uploadFile(localFilePath)
 					uploadedCount++
 				} else {
-					log.info(`Skipping (up to date): ${localFilePath}`)
+					log.debug(`Skipping (up to date): ${localFilePath}`)
 					skippedCount++
 				}
 			}
 
-			log.info('Sync completed:')
-			log.info(`- Uploaded: ${uploadedCount} files`)
-			log.info(`- Skipped: ${skippedCount} files`)
-			log.info(`- Remote files preserved: ${remoteFiles.size - uploadedCount} files`)
+			log.debug('Sync completed:')
+			log.info(`Uploaded: ${uploadedCount} log ${plur('file', uploadedCount)}`)
+			log.debug(`Skipped: ${skippedCount} ${plur('file', skippedCount)}`)
+			log.debug(
+				`Remote files preserved: ${remoteFiles.size - uploadedCount} ${plur('file', remoteFiles.size - uploadedCount)}`,
+			)
 		} catch (error) {
 			log.withError(error).error('Sync failed:')
-			throw error
 		}
 	}
 
@@ -356,7 +358,7 @@ export class S3FolderSync {
 
 		const remoteKey = this.getRemoteKey(localFilePath)
 
-		log.info(`Uploading: ${localFilePath} -> ${remoteKey}`)
+		log.debug(`Uploading: ${localFilePath} -> ${remoteKey}`)
 
 		const command = new PutObjectCommand({
 			// eslint-disable-next-line ts/naming-convention

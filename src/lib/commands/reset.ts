@@ -1,5 +1,6 @@
 import keytar from 'keytar-forked'
 import { log } from 'lognow'
+import plur from 'plur'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { unregisterAll } from '../service'
 
@@ -8,18 +9,18 @@ async function clearCredentials() {
 	const credentials = await keytar.findCredentials(KEYCHAIN_SERVICE)
 
 	if (credentials.length === 0) {
-		log.info('No credentials found')
+		log.debug('No credentials found')
 		return
 	}
 
-	log.info(`Found ${credentials.length} credentials`)
+	log.debug(`Found ${credentials.length} credentials`)
 
 	for (const credential of credentials) {
-		log.info(`Deleting credential for ${credential.account}`)
+		log.debug(`Deleting credential for ${credential.account}`)
 		await keytar.deletePassword(KEYCHAIN_SERVICE, credential.account)
 	}
 
-	log.info('Credentials cleared')
+	log.info(`Cleared ${credentials.length} ${plur('credential', credentials.length)}`)
 }
 
 /**

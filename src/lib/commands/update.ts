@@ -23,7 +23,7 @@ async function getGitHubPat(): Promise<string | undefined> {
 	let pat = await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)
 
 	if (!pat) {
-		log.info('GitHub Personal Access Token not found')
+		log.warn('GitHub Personal Access Token not found')
 
 		const newPat = await text({
 			message: 'Please enter your GitHub Personal Access Token (PAT) with `repo` scope:',
