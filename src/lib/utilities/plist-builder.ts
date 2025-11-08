@@ -16,8 +16,6 @@ export function createApplicationPlist(options: {
 	schedule?: string
 	userPath: string
 }): string {
-	console.log(options)
-
 	const logDirectoryPathResolved =
 		options.logDirectoryPath ?? path.join(os.homedir(), 'Library', 'Logs')
 

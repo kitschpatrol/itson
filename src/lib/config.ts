@@ -61,6 +61,7 @@ export type ItsonConfigTask = Simplify<
 		 * Schedule to run the application at specified times or at `@reboot` (system startup).
 		 * If undefined, the application will run when itson is launched and be kept alive.
 		 * Uses cron syntax (with some edge-case limitations)
+		 * Uses local time, not UTC.
 		 * @default undefined
 		 */
 		schedule: string
