@@ -9,7 +9,7 @@ import { log } from 'lognow'
 import { createWriteStream } from 'node:fs'
 import { mkdir, rename, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { basename, join } from 'node:path'
+import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import semver from 'semver'
@@ -196,6 +196,8 @@ async function getVersionFromCLI(cli: string): Promise<string | undefined> {
 }
 
 async function updateFromGitHubPythonRelease(
+	/** For Logging only */
+	name: string,
 	owner: string,
 	repo: string,
 	cli: string,
@@ -211,7 +213,7 @@ async function updateFromGitHubPythonRelease(
 		semver.valid(versionConstraint) &&
 		semver.eq(localVersion, versionConstraint)
 	) {
-		log.info(`${cli} is already at the exact version specified: ${localVersion}.`)
+		log.info(`${name} is already at the exact version specified: ${localVersion}.`)
 		return
 	}
 
@@ -229,7 +231,7 @@ async function updateFromGitHubPythonRelease(
 		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
 			// For range constraints, only upgrade
 			log.info(
-				`${cli} is already up to date with version ${localVersion} (best available: ${release.version}).`,
+				`${name} is already up to date with version ${localVersion} (best available: ${release.version}).`,
 			)
 			return
 		}
@@ -238,7 +240,7 @@ async function updateFromGitHubPythonRelease(
 
 	// If no constraint but local version is same or newer than release, skip
 	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
-		log.info(`${cli} is already up to date with version ${localVersion}.`)
+		log.info(`${name} is already up to date with version ${localVersion}.`)
 		return
 	}
 
@@ -313,6 +315,8 @@ async function downloadReleaseAsset(
  */
 // eslint-disable-next-line complexity
 export async function updateFromGitHubRelease(
+	/** For Logging only */
+	name: string,
 	owner: string,
 	repo: string,
 	destination: string,
@@ -331,7 +335,7 @@ export async function updateFromGitHubRelease(
 		semver.valid(versionConstraint) &&
 		semver.eq(localVersion, versionConstraint)
 	) {
-		log.info(`${destination} is already at the exact version specified: ${localVersion}.`)
+		log.info(`${name} is already at the exact version specified: ${localVersion}.`)
 		return downloadedPaths
 	}
 
@@ -349,7 +353,7 @@ export async function updateFromGitHubRelease(
 		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
 			// For range constraints, only upgrade
 			log.info(
-				`${destination} is already up to date with version ${localVersion} (best available: ${release.version}).`,
+				`${name} is already up to date with version ${localVersion} (best available: ${release.version}).`,
 			)
 			return downloadedPaths
 		}
@@ -358,7 +362,7 @@ export async function updateFromGitHubRelease(
 
 	// If no constraint but local version is same or newer than release, skip
 	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
-		log.info(`${destination} is already up to date with version ${localVersion}.`)
+		log.info(`${name} is already up to date with version ${localVersion}.`)
 		return downloadedPaths
 	}
 
@@ -389,7 +393,7 @@ export async function updateFromGitHubRelease(
 				await rm(destinationPath, { force: true, recursive: true })
 				await rename(downloadedPath, destinationPath)
 				downloadedPath = destinationPath
-				log.info(`Moved ${basename(downloadedPath)} to ${destination}`)
+				log.info(`Moved ${artifact.name} to ${destination}`)
 			}
 			downloadedPaths.push(downloadedPath)
 		}
@@ -423,6 +427,7 @@ export async function updateAllAppsAndTasks(config: ItsonConfig) {
 		if (appOrTask.update !== undefined) {
 			if (appOrTask.update.type === 'github') {
 				const downloadedPaths = await updateFromGitHubRelease(
+					appOrTask.name,
 					appOrTask.update.owner,
 					appOrTask.update.repo,
 					appOrTask.update.destination,
@@ -436,7 +441,7 @@ export async function updateAllAppsAndTasks(config: ItsonConfig) {
 						const version = await getVersion(downloadedPath)
 						// eslint-disable-next-line max-depth
 						if (version) {
-							log.info(`Version of ${basename(downloadedPath)}: ${version}`)
+							log.info(`Version of ${appOrTask.name}: ${version}`)
 						}
 					} else {
 						log.error(`No downloaded path for ${appOrTask.name}`)
@@ -445,6 +450,7 @@ export async function updateAllAppsAndTasks(config: ItsonConfig) {
 				// eslint-disable-next-line ts/no-unnecessary-condition
 			} else if (appOrTask.update.type === 'github-python') {
 				await updateFromGitHubPythonRelease(
+					appOrTask.name,
 					appOrTask.update.owner,
 					appOrTask.update.repo,
 					appOrTask.command,
