@@ -223,6 +223,10 @@ Though the tool itself is written in TypeScript, the actual functionality is pro
 
 [@kitschpatrol](https://github.com/kitschpatrol)
 
+## Acknowledgments
+
+Thanks to [Philipp Kühn](https://orcid.org/0000-0002-1739-876X) for demonstrating an approach to mapping cron syntax to the constraints of launchd's task scheduling system in his [crontab-to-launchd](https://github.com/randomn4me/crontab-to-launchd) project.
+
 <!-- mdat:contributing -->
 
 ## Contributing
