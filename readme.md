@@ -27,7 +27,7 @@
 
 ## Overview
 
-Itson helps you install, update, and run your bespoke privately-distributed applications in the context of long-running interactive installations or exhibits.
+Itson helps you install, update, and run your bespoke privately-distributed applications in the context of long-running interactive installations, kiosks, or exhibits.
 
 Itson does the following each time it runs:
 
