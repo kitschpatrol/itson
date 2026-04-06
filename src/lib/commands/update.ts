@@ -18,6 +18,7 @@ import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { getVersion, unzip } from '../../lib/utilities.js'
 
 const GITHUB_PAT_ACCOUNT = 'github-pat'
+const V_PREFIX_REGEX = /^v/
 
 async function getGitHubPat(): Promise<string | undefined> {
 	let pat = await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)
@@ -97,7 +98,7 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 				name: asset.name,
 				url: asset.url,
 			})),
-			version: release.tag_name.replace(/^v/, ''),
+			version: release.tag_name.replace(V_PREFIX_REGEX, ''),
 		}))
 	} catch (error) {
 		log.error(
@@ -139,7 +140,7 @@ async function getLatestRelease(owner: string, repo: string): Promise<GitHubRele
 				name: asset.name,
 				url: asset.url,
 			})),
-			version: latestRelease.tag_name.replace(/^v/, ''),
+			version: latestRelease.tag_name.replace(V_PREFIX_REGEX, ''),
 		}
 	} catch (error) {
 		log.error(
@@ -293,7 +294,7 @@ async function downloadReleaseAsset(
 		const filePath = join(temporaryDirectory, asset.name)
 
 		// @ts-expect-error - Readable.fromWeb is experimental
-		// eslint-disable-next-line node/no-unsupported-features/node-builtins
+
 		await pipeline(Readable.fromWeb(response.body), createWriteStream(filePath))
 
 		const fileStats = await stat(filePath)

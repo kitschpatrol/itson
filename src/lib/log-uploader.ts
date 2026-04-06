@@ -1,4 +1,3 @@
-/* eslint-disable ts/member-ordering */
 // TODO revisit client-s3 version
 // Currently pinned to 3.893.0 because of issues in another project, which might not apply here
 import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
@@ -27,6 +26,8 @@ const IGNORE_PATTERNS = [
 	'**/.env*',
 ]
 
+const TRAILING_SLASH_REGEX = /\/$/
+
 export class S3FolderSync {
 	private static get keychainAccessKeyAccount() {
 		return 's3-access-key'
@@ -38,6 +39,7 @@ export class S3FolderSync {
 
 	private readonly config: ItsonLogUploadStrategyS3
 	private readonly ignorePatterns: string[]
+
 	private s3Client: S3Client | undefined = undefined
 
 	constructor(config: ItsonLogUploadStrategyS3) {
@@ -273,7 +275,7 @@ export class S3FolderSync {
 		const remoteKey = relativePath.split(sep).join('/') // Ensure forward slashes
 
 		return this.config.remotePath
-			? `${this.config.remotePath.replace(/\/$/, '')}/${remoteKey}`
+			? `${this.config.remotePath.replace(TRAILING_SLASH_REGEX, '')}/${remoteKey}`
 			: remoteKey
 	}
 

@@ -15,6 +15,9 @@ function parseAndGenerate(crontabExpr: string): [LaunchdPlistFragment, string] {
 	return [entry, xmlOutput]
 }
 
+const PLIST_START_CALENDAR_INTERVAL_REGEX = /<key>StartCalendarInterval<\/key>\s*<(array|dict)>/
+const PLIST_ARRAY_REGEX = /<array>([\s\S]*?)<\/array>/
+
 /**
  * Count the number of scheduling intervals (Calendar or Start)
  */
@@ -30,7 +33,7 @@ function countIntervals(xmlOutput: string): number {
 	}
 
 	// Find StartCalendarInterval
-	const calendarMatch = /<key>StartCalendarInterval<\/key>\s*<(array|dict)>/.exec(xmlOutput)
+	const calendarMatch = PLIST_START_CALENDAR_INTERVAL_REGEX.exec(xmlOutput)
 	if (!calendarMatch) {
 		return 0
 	}
@@ -41,7 +44,7 @@ function countIntervals(xmlOutput: string): number {
 		const afterKey = xmlOutput.slice(
 			Math.max(0, xmlOutput.indexOf('<key>StartCalendarInterval</key>')),
 		)
-		const arrayMatch = /<array>([\s\S]*?)<\/array>/.exec(afterKey)
+		const arrayMatch = PLIST_ARRAY_REGEX.exec(afterKey)
 		if (arrayMatch) {
 			const arrayContent = arrayMatch[1]
 			const dictMatches = arrayContent.match(/<dict>/g)

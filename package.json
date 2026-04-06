@@ -20,6 +20,7 @@
 		"email": "eric@ericmika.com",
 		"url": "https://ericmika.com"
 	},
+	"sideEffects": false,
 	"type": "module",
 	"bin": {
 		"itson": "dist/cli.js"
@@ -28,48 +29,49 @@
 		"dist/*"
 	],
 	"scripts": {
-		"build": "tsdown --no-fixed-extension ./src/bin/cli.ts",
+		"build": "tsdown",
 		"clean": "git rm -f pnpm-lock.yaml ; git clean -fdX",
 		"fix": "ksc fix",
 		"lint": "ksc lint",
 		"release": "bumpp --commit 'Release: %s' && pnpm run build && NPM_AUTH_TOKEN=$(op read 'op://Personal/npm/token') && pnpm publish",
-		"test": "vitest",
+		"test": "vitest run",
 		"test:install": "pnpm link",
 		"test:uninstall": "pnpm remove -g itson"
 	},
 	"dependencies": {
-		"c12": "^3.3.2",
-		"execa": "^9.6.1",
-		"keytar-forked": "^7.10.0"
-	},
+    "@aws-sdk/client-s3": "3.893.0",
+    "@clack/prompts": "^1.2.0",
+    "@octokit/rest": "^22.0.1",
+    "c12": "^3.3.4",
+    "cron-parser": "^5.5.0",
+    "cronstrue": "^3.14.0",
+    "execa": "^9.6.1",
+    "find-versions": "^6.0.0",
+    "is-online": "^12.0.2",
+    "keytar-forked": "^7.10.0",
+    "lognow": "^0.6.1",
+    "minimatch": "^10.2.5",
+    "plist": "^3.1.0",
+    "plur": "^6.0.0",
+    "semver": "^7.7.4",
+    "yargs": "^18.0.0"
+  },
 	"devDependencies": {
-		"@aws-sdk/client-s3": "3.893.0",
-		"@clack/prompts": "^0.11.0",
-		"@kitschpatrol/shared-config": "^5.10.0",
-		"@octokit/rest": "^22.0.1",
-		"@types/node": "^22.19.1",
-		"@types/plist": "^3.0.5",
-		"@types/semver": "^7.7.1",
-		"@types/yargs": "^17.0.35",
-		"bumpp": "^10.3.2",
-		"cron-parser": "^5.4.0",
-		"cronstrue": "^3.9.0",
-		"find-versions": "^6.0.0",
-		"is-online": "^12.0.2",
-		"lognow": "^0.4.0",
-		"mdat-plugin-cli-help": "^1.0.4",
-		"minimatch": "^10.1.1",
-		"plist": "^3.1.0",
-		"plur": "^6.0.0",
-		"semver": "^7.7.3",
-		"tsdown": "^0.17.0",
-		"type-fest": "^5.3.0",
-		"typescript": "~5.9.3",
-		"vitest": "^4.0.15",
-		"yargs": "^18.0.0"
-	},
-	"packageManager": "pnpm@10.24.0",
+    "@kitschpatrol/shared-config": "^7.1.0",
+    "@types/node": "^22.19.17",
+    "@types/plist": "^3.0.5",
+    "@types/semver": "^7.7.1",
+    "@types/yargs": "^17.0.35",
+    "bumpp": "^11.0.1",
+    "mdat-plugin-cli-help": "^2.0.2",
+    "publint": "^0.3.18",
+    "tsdown": "^0.21.7",
+    "type-fest": "^5.5.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.2"
+  },
+	"packageManager": "pnpm@10.33.0",
 	"engines": {
-		"node": ">=22.12.0"
+		"node": ">=22.18.0"
 	}
 }
