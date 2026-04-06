@@ -74,7 +74,31 @@ jobs:
         run: pnpm run build
 
       - name: Lint
-        run: pnpm run lint
+        run: |
+          echo "::group::ksc-repo"
+          npx ksc-repo lint
+          echo "::endgroup::"
+          echo "::group::ksc-mdat"
+          npx ksc-mdat lint
+          echo "::endgroup::"
+          echo "::group::ksc-typescript"
+          npx ksc-typescript lint
+          echo "::endgroup::"
+          echo "::group::ksc-eslint"
+          npx ksc-eslint lint
+          echo "::endgroup::"
+          echo "::group::ksc-stylelint"
+          npx ksc-stylelint lint
+          echo "::endgroup::"
+          echo "::group::ksc-cspell"
+          npx ksc-cspell lint
+          echo "::endgroup::"
+          echo "::group::ksc-knip"
+          npx ksc-knip lint
+          echo "::endgroup::"
+          echo "::group::ksc-prettier"
+          npx ksc-prettier lint
+          echo "::endgroup::"
 
       - name: Test
         run: pnpm run test
