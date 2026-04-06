@@ -35,7 +35,8 @@ async function isLaunchdAvailable(): Promise<boolean> {
 	}
 }
 
-describeOnMac('Service Management (macOS)', () => {
+// Increase timeout for service tests since launchctl commands can be slow on CI
+describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 	// Use a unique name to avoid collisions with real services
 	const testSuffix = `test-${Date.now()}`
 

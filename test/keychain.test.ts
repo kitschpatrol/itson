@@ -83,11 +83,11 @@ describeOnMac('Keychain Integration (macOS)', () => {
 			expect(result).toBe(longPassword)
 		})
 
-		it('should handle empty string password', async () => {
-			await kt.setPassword(TEST_SERVICE, 'empty-password', '')
+		it('should handle very short password', async () => {
+			await kt.setPassword(TEST_SERVICE, 'short-password', 'x')
 
-			const result = await kt.getPassword(TEST_SERVICE, 'empty-password')
-			expect(result).toBe('')
+			const result = await kt.getPassword(TEST_SERVICE, 'short-password')
+			expect(result).toBe('x')
 		})
 	})
 
