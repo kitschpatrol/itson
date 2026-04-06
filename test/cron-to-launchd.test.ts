@@ -58,8 +58,8 @@ function countIntervals(xmlOutput: string): number {
 }
 
 /**
- * Comprehensive tests covering all possible crontab field patterns.
- * Tests interval counting to ensure correct expansion of cron expressions.
+ * Comprehensive tests covering all possible crontab field patterns. Tests
+ * interval counting to ensure correct expansion of cron expressions.
  */
 describe('ComprehensivePatterns', () => {
 	// MINUTE FIELD TESTS (0-59)
