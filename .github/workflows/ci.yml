@@ -73,32 +73,11 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Generate CLI help for readme
+        run: npx ksc-mdat fix || true
+
       - name: Lint
-        run: |
-          echo "::group::ksc-repo"
-          npx ksc-repo lint
-          echo "::endgroup::"
-          echo "::group::ksc-mdat"
-          npx ksc-mdat lint
-          echo "::endgroup::"
-          echo "::group::ksc-typescript"
-          npx ksc-typescript lint
-          echo "::endgroup::"
-          echo "::group::ksc-eslint"
-          npx ksc-eslint lint
-          echo "::endgroup::"
-          echo "::group::ksc-stylelint"
-          npx ksc-stylelint lint
-          echo "::endgroup::"
-          echo "::group::ksc-cspell"
-          npx ksc-cspell lint
-          echo "::endgroup::"
-          echo "::group::ksc-knip"
-          npx ksc-knip lint
-          echo "::endgroup::"
-          echo "::group::ksc-prettier"
-          npx ksc-prettier lint
-          echo "::endgroup::"
+        run: pnpm run lint
 
       - name: Test
         run: pnpm run test
