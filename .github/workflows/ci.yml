@@ -41,41 +41,49 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm run build
-
-      - name: Lint
-        run: pnpm run lint
-
       - name: Setup macOS Keychain for tests
-        if: runner.os == 'macOS'
         run: |
-          # Create a temporary keychain for CI testing
+          set -euo pipefail
+
           KEYCHAIN_NAME="ci-test.keychain-db"
           KEYCHAIN_PASSWORD="ci-test-password"
+
+          # Remove any leftover keychain from a previous run
+          security delete-keychain "$KEYCHAIN_NAME" 2>/dev/null || true
 
           # Create and configure the temporary keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_NAME"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
 
+          # Allow non-interactive access (critical for CI)
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+
           # Add the temporary keychain to the search list (prepend it)
-          # This ensures keytar can find it while preserving access to system keychains
-          security list-keychains -d user -s "$KEYCHAIN_NAME" $(security list-keychains -d user | tr -d '"' | tr '\n' ' ')
+          EXISTING_KEYCHAINS=$(security list-keychains -d user | tr -d '"' | tr '\n' ' ')
+          security list-keychains -d user -s "$KEYCHAIN_NAME" $EXISTING_KEYCHAINS
           security default-keychain -s "$KEYCHAIN_NAME"
 
           # Verify the keychain is accessible
+          echo "Keychain search list:"
           security list-keychains -d user
+          echo "Default keychain:"
+          security default-keychain
 
       - name: Ensure LaunchAgents directory exists
-        if: runner.os == 'macOS'
         run: mkdir -p ~/Library/LaunchAgents
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Lint
+        run: pnpm run lint
 
       - name: Test
         run: pnpm run test
 
       - name: Cleanup macOS Keychain
-        if: runner.os == 'macOS' && always()
+        if: always()
         run: |
           KEYCHAIN_NAME="ci-test.keychain-db"
           security delete-keychain "$KEYCHAIN_NAME" 2>/dev/null || true
