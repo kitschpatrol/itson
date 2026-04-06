@@ -72,7 +72,7 @@ export class S3FolderSync {
 
 			const newAccessKeyId = await text({
 				message: 'Please enter your S3 Access Key ID:',
-				validate(value: string) {
+				validate(value: string | undefined) {
 					if (!value) {
 						return 'An access key ID is required.'
 					}
@@ -109,7 +109,7 @@ export class S3FolderSync {
 
 			const newSecretAccessKey = await text({
 				message: 'Please enter your S3 Secret Access Key:',
-				validate(value: string) {
+				validate(value: string | undefined) {
 					if (!value) {
 						return 'A secret access key is required.'
 					}
