@@ -28,7 +28,7 @@ async function getGitHubPat(): Promise<string | undefined> {
 
 		const newPat = await text({
 			message: 'Please enter your GitHub Personal Access Token (PAT) with `repo` scope:',
-			validate(value: string) {
+			validate(value: string | undefined) {
 				if (!value) {
 					return 'A token is required.'
 				}
