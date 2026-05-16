@@ -1,6 +1,6 @@
 // Tests adapted from https://github.com/randomn4me/crontab-to-launchd
 
-import plist from 'plist'
+import { build } from 'plist'
 import { describe, expect, it } from 'vitest'
 import type { LaunchdPlistFragment } from '../src/lib/utilities/cron-to-launchd'
 import { cronToPlistFragment } from '../src/lib/utilities/cron-to-launchd'
@@ -10,7 +10,7 @@ import { cronToPlistFragment } from '../src/lib/utilities/cron-to-launchd'
  */
 function parseAndGenerate(crontabExpr: string): [LaunchdPlistFragment, string] {
 	const entry = cronToPlistFragment(crontabExpr)
-	const xmlOutput = plist.build(entry)
+	const xmlOutput = build(entry)
 
 	return [entry, xmlOutput]
 }

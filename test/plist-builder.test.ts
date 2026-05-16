@@ -1,6 +1,6 @@
 /* eslint-disable ts/naming-convention, ts/no-unsafe-type-assertion */
 
-import plist from 'plist'
+import { build, parse } from 'plist'
 import { describe, expect, it } from 'vitest'
 import { createApplicationPlist } from '../src/lib/utilities/plist-builder'
 
@@ -19,7 +19,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/local/bin:/usr/bin:/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 
 		expect(parsed.Label).toBe('com.itson.app.TestApp')
 		expect(parsed.ProgramArguments).toEqual(['/usr/bin/env', '/usr/local/bin/my-app'])
@@ -44,7 +44,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/bin:/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 
 		expect(parsed.Label).toBe('com.itson.task.Cleanup')
 		expect(parsed.KeepAlive).toBe(false)
@@ -61,7 +61,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/bin:/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 
 		// Should have StartCalendarInterval instead of RunAtLoad
 		expect(parsed.StartCalendarInterval).toBeDefined()
@@ -77,7 +77,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/bin:/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 		expect(parsed.RunAtLoad).toBe(true)
 	})
 
@@ -90,7 +90,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/bin:/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 		expect(parsed.ProgramArguments).toEqual([
 			'/usr/bin/env',
 			'/usr/local/bin/my-app',
@@ -108,7 +108,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 		expect(parsed.StandardOutPath).toMatch(OUT_LOG_REGEX)
 		expect(parsed.StandardErrorPath).toMatch(ERR_LOG_REGEX)
 	})
@@ -122,7 +122,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 		expect(parsed.StandardOutPath).toBe('/tmp/logs/com.itson.app.CustomLog.out.log')
 		expect(parsed.StandardErrorPath).toBe('/tmp/logs/com.itson.app.CustomLog.err.log')
 	})
@@ -138,9 +138,9 @@ describe('createApplicationPlist', () => {
 		})
 
 		// Parse and rebuild should produce equivalent structure
-		const parsed = plist.parse(result)
-		const rebuilt = plist.build(parsed)
-		const reParsed = plist.parse(rebuilt)
+		const parsed = parse(result)
+		const rebuilt = build(parsed)
+		const reParsed = parse(rebuilt)
 
 		expect(reParsed).toEqual(parsed)
 	})
@@ -154,7 +154,7 @@ describe('createApplicationPlist', () => {
 			userPath: '/usr/bin',
 		})
 
-		const parsed = plist.parse(result) as PlistRecord
+		const parsed = parse(result) as PlistRecord
 		expect(parsed.ProgramArguments).toEqual(['/usr/bin/env', 'my-app'])
 	})
 })

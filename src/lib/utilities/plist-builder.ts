@@ -1,7 +1,7 @@
 /* eslint-disable ts/naming-convention */
 import os from 'node:os'
 import path from 'node:path'
-import plist from 'plist'
+import { build } from 'plist'
 import { cronToPlistFragment } from './cron-to-launchd'
 
 /**
@@ -19,7 +19,7 @@ export function createApplicationPlist(options: {
 	const logDirectoryPathResolved =
 		options.logDirectoryPath ?? path.join(os.homedir(), 'Library', 'Logs')
 
-	return plist.build(
+	return build(
 		/* eslint-disable perfectionist/sort-objects */
 		{
 			Label: options.label,
