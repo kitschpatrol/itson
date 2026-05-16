@@ -1,4 +1,4 @@
-<!-- @case-police-ignore MacOS -->
+<!-- // @case-police-ignore MacOS -->
 
 <!-- title -->
 
@@ -9,7 +9,7 @@
 <!-- badges -->
 
 [![NPM Package itson](https://img.shields.io/npm/v/itson.svg)](https://npmjs.com/package/itson)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit/)
 [![CI](https://github.com/kitschpatrol/itson/actions/workflows/ci.yml/badge.svg)](https://github.com/kitschpatrol/itson/actions/workflows/ci.yml)
 
 <!-- /badges -->
@@ -51,7 +51,7 @@ Itson does the following each time it runs:
 
 Itson is architected with future cross-platform support in mind, but currently only provides implementations for macOS.
 
-Itson requires [Node](https://nodejs.org/) 22.12.0+.
+Itson requires [Node](https://nodejs.org/) 22.18.0+.
 
 Installing Python application packages requires [uv](https://docs.astral.sh/uv/).
 
@@ -124,6 +124,37 @@ Itson works offline, but certain operations (log uploading, application updates)
 
 <!-- cli-help ({depth: 1}) -->
 
+#### Command: `itson`
+
+Run an itson command.
+
+If no command is provided, `itson launch` is run by default.
+
+Usage:
+
+```txt
+itson [command]
+```
+
+| Command       | Description                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `launch`      | Update, register, and start all managed applications. Applications will auto-restart if they crash. _(Default command.)_  |
+| `start`       | Start all managed applications. Applications will auto-restart if they crash.                                             |
+| `stop`        | Stop all managed applications.                                                                                            |
+| `update`      | Update all managed applications and tasks to the latest available versions.                                               |
+| `upload-logs` | Upload all application and task logs to the configured S3 bucket.                                                         |
+| `register`    | Register itson with the system according to the config file. Optionally run this after changing state in the config file. |
+| `reset`       | Clear any credentials stored in the system keychain, and remove any registered services.                                  |
+
+| Option              | Description                                                              | Type      |
+| ------------------- | ------------------------------------------------------------------------ | --------- |
+| `--verbose`         | Run with verbose logging. Overrides the config file.                     | `boolean` |
+| `--offline`         | Skip operations that require internet access. Overrides the config file. | `boolean` |
+| `--help`<br>`-h`    | Show help                                                                | `boolean` |
+| `--version`<br>`-v` | Show version number                                                      | `boolean` |
+
+<!-- /cli-help -->
+
 ## Background
 
 ### Alternatives
@@ -193,7 +224,7 @@ Though the tool itself is written in TypeScript, the actual functionality is pro
 
 ## Maintainers
 
-[@kitschpatrol](https://github.com/kitschpatrol)
+[kitschpatrol](https://github.com/kitschpatrol)
 
 ## Acknowledgments
 
@@ -203,7 +234,11 @@ Thanks to [Philipp Kühn](https://orcid.org/0000-0002-1739-876X) for demonstrati
 
 ## Contributing
 
-[Issues](https://github.com/kitschpatrol/itson/issues) and pull requests are welcome.
+[Issues](https://github.com/kitschpatrol/itson/issues) are welcome and appreciated.
+
+Please open an issue to discuss changes before submitting a pull request. Unsolicited PRs (especially AI-generated ones) are unlikely to be merged.
+
+This repository uses [@kitschpatrol/shared-config](https://github.com/kitschpatrol/shared-config) (via its `ksc` CLI) for linting and formatting, plus [MDAT](https://github.com/kitschpatrol/mdat) for readme placeholder expansion.
 
 <!-- /contributing -->
 
@@ -211,6 +246,6 @@ Thanks to [Philipp Kühn](https://orcid.org/0000-0002-1739-876X) for demonstrati
 
 ## License
 
-[MIT](license.txt) © Eric Mika
+[MIT](license.txt) © [Eric Mika](https://ericmika.com)
 
 <!-- /license -->

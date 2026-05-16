@@ -24,7 +24,8 @@ async function clearCredentials() {
 }
 
 /**
- * Clear any credentials stored in the system keychain, and remove any registered services
+ * Clear any credentials stored in the system keychain, and remove any
+ * registered services
  */
 export async function reset() {
 	log.info('Resetting itson')

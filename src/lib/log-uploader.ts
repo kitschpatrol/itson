@@ -76,6 +76,7 @@ export class S3FolderSync {
 					if (!value) {
 						return 'An access key ID is required.'
 					}
+
 					if (value.length < 10) {
 						return 'Please enter a valid S3 Access Key ID.'
 					}
@@ -113,6 +114,7 @@ export class S3FolderSync {
 					if (!value) {
 						return 'A secret access key is required.'
 					}
+
 					if (value.length < 20) {
 						return 'Please enter a valid S3 Secret Access Key.'
 					}
@@ -351,6 +353,7 @@ export class S3FolderSync {
 
 	/**
 	 * Upload a file to S3
+	 *
 	 * @throws {Error}
 	 */
 	private async uploadFile(localFilePath: string): Promise<void> {

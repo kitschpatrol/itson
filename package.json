@@ -30,17 +30,17 @@
 	],
 	"scripts": {
 		"build": "tsdown",
-		"clean": "git rm -f pnpm-lock.yaml ; git clean -fdX",
+		"clean": "shx rm -f pnpm-lock.yaml && git clean -fdX -e !.claude/",
 		"fix": "ksc fix",
 		"lint": "ksc lint",
-		"release": "bumpp --commit 'Release: %s' && pnpm run build && NPM_AUTH_TOKEN=$(op read 'op://Personal/npm/token') && pnpm publish",
+		"release": "bumpp --commit 'Release: %s' && pnpm build && NPM_AUTH_TOKEN=$(op read 'op://Personal/npm/token') pnpm publish",
 		"test": "vitest run",
 		"test:install": "pnpm link",
 		"test:uninstall": "pnpm remove -g itson"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "3.893.0",
-		"@clack/prompts": "^1.2.0",
+		"@clack/prompts": "^1.4.0",
 		"@octokit/rest": "^22.0.1",
 		"c12": "^3.3.4",
 		"cron-parser": "^5.5.0",
@@ -49,29 +49,30 @@
 		"find-versions": "^6.0.0",
 		"is-online": "^12.0.2",
 		"keytar-forked": "^7.10.0",
-		"lognow": "^0.6.1",
+		"lognow": "^0.6.2",
 		"minimatch": "^10.2.5",
-		"plist": "^3.1.0",
+		"plist": "^3.1.1",
 		"plur": "^6.0.0",
-		"semver": "^7.7.4",
+		"semver": "^7.8.0",
 		"yargs": "^18.0.0"
 	},
 	"devDependencies": {
-		"@kitschpatrol/shared-config": "^7.1.0",
-		"@types/node": "^22.19.17",
+		"@kitschpatrol/shared-config": "^7.6.0",
+		"@types/node": "~24.0.15",
 		"@types/plist": "^3.0.5",
 		"@types/semver": "^7.7.1",
 		"@types/yargs": "^17.0.35",
-		"bumpp": "^11.0.1",
-		"mdat-plugin-cli-help": "^2.0.2",
-		"publint": "^0.3.18",
-		"tsdown": "^0.21.7",
-		"type-fest": "^5.5.0",
+		"bumpp": "^11.1.0",
+		"mdat-plugin-cli-help": "^3.0.0",
+		"publint": "^0.3.21",
+		"shx": "^0.4.0",
+		"tsdown": "^0.22.0",
+		"type-fest": "^5.6.0",
 		"typescript": "~5.9.3",
-		"vitest": "^4.1.2"
+		"vitest": "^4.1.6"
 	},
-	"packageManager": "pnpm@10.33.0",
+	"packageManager": "pnpm@11.1.2",
 	"engines": {
-		"node": ">=22.18.0"
+		"node": ">=24.0.0"
 	}
 }

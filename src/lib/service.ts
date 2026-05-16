@@ -28,9 +28,10 @@ async function getServiceState(label: string): Promise<{ isLoaded: boolean; isRu
 }
 
 /**
- * On macOS, register a service with launchd.
- * Applications start immediately and will keep running.
- * Tasks start on schedule and will run once and then stop. They will not run immediately.
+ * On macOS, register a service with launchd. Applications start immediately and
+ * will keep running. Tasks start on schedule and will run once and then stop.
+ * They will not run immediately.
+ *
  * @public
  */
 export async function startService(appOrTask: ItsonConfigApplication | ItsonConfigTask) {
@@ -64,6 +65,7 @@ export async function startService(appOrTask: ItsonConfigApplication | ItsonConf
 	} else {
 		log.debug(`Service ${label} is not loaded.`)
 	}
+
 	if (isRunning) {
 		log.debug(`Service ${label} is running.`)
 	}
@@ -113,6 +115,7 @@ export async function startService(appOrTask: ItsonConfigApplication | ItsonConf
 
 /**
  * Unregister any "orphaned" launchd services that are not in the config.
+ *
  * @public
  */
 export async function unregisterOrphans(config: ItsonConfig): Promise<number> {
@@ -148,11 +151,13 @@ async function getAllPlistPaths(): Promise<string[]> {
 	for await (const plistFile of plistFiles) {
 		plistPaths.push(plistFile)
 	}
+
 	return plistPaths
 }
 
 /**
  * Stop and unregister all services with the label `com.itson.*`.
+ *
  * @public
  */
 export async function unregisterAll() {
@@ -173,6 +178,7 @@ export async function unregisterAll() {
 
 /**
  * Unregister an application stops the service and removes the plist file
+ *
  * @public
  */
 export async function unregisterService(appOrTask: ItsonConfigApplication | ItsonConfigTask) {

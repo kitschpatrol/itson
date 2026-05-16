@@ -32,6 +32,7 @@ async function getGitHubPat(): Promise<string | undefined> {
 				if (!value) {
 					return 'A token is required.'
 				}
+
 				if (!value.startsWith('github_pat_')) {
 					return 'Please enter a valid GitHub Personal Access Token.'
 				}
@@ -65,6 +66,7 @@ type GitHubRelease = {
 
 /**
  * Get all releases from a GitHub repository
+ *
  * @public
  */
 export async function getAllReleases(owner: string, repo: string): Promise<GitHubRelease[]> {
@@ -151,6 +153,7 @@ async function getLatestRelease(owner: string, repo: string): Promise<GitHubRele
 
 /**
  * Find the best release that satisfies a semver constraint
+ *
  * @public
  */
 export async function getBestReleaseForConstraint(
@@ -312,6 +315,7 @@ async function downloadReleaseAsset(
 
 /**
  * Update an app or task from a GitHub release
+ *
  * @public
  */
 // eslint-disable-next-line complexity
@@ -396,14 +400,17 @@ export async function updateFromGitHubRelease(
 				downloadedPath = destinationPath
 				log.info(`Moved ${artifact.name} to ${destination}`)
 			}
+
 			downloadedPaths.push(downloadedPath)
 		}
 	}
+
 	return downloadedPaths
 }
 
 /**
  * Update all apps and tasks in the config
+ *
  * @public
  */
 export async function updateAllAppsAndTasks(config: ItsonConfig) {

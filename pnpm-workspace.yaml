@@ -1,13 +1,3 @@
-ignoredBuiltDependencies:
-  - rollup
-
-onlyBuiltDependencies:
-  - esbuild
-  - keytar-forked
-  - oxc-resolver
-  - unrs-resolver
-
-# Required by @kitschpatrol/shared-config
 publicHoistPattern:
   - '@kitschpatrol/repo-config'
   - '@kitschpatrol/typescript-config'
@@ -19,6 +9,11 @@ publicHoistPattern:
   - '*prettier*'
   - '*remark*'
   - '*stylelint*'
-
 overrides:
-  normalize-package-data: ^8.0.0
+  normalize-package-data: ^9.0.0
+allowBuilds:
+  esbuild: true
+  keytar-forked: true
+  oxc-resolver: true
+  unrs-resolver: true
+  rollup: false

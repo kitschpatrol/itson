@@ -2,9 +2,9 @@
 /* eslint-disable complexity */
 
 /**
- * This could be its own package.
- * Inspired by https://github.com/randomn4me/crontab-to-launchd, but leans
- * on existing libraries for cron parsing and plist manipulation.
+ * This could be its own package. Inspired by
+ * https://github.com/randomn4me/crontab-to-launchd, but leans on existing
+ * libraries for cron parsing and plist manipulation.
  */
 
 import { CronExpressionParser } from 'cron-parser'
@@ -26,24 +26,27 @@ export type LaunchdPlistFragment = {
 /**
  * Convert a cron string to a functionally equivalent launchd plist fragment
  *
- * Seconds values don't map cleanly from cron to launchd, so we treat them
- * as a special case and do our best to convert them to a launchd compatible format.
+ * Seconds values don't map cleanly from cron to launchd, so we treat them as a
+ * special case and do our best to convert them to a launchd compatible format.
  * Many input combinations cannot be represented, however, so it's advised to
  * avoid using seconds values in cron strings if possible.
  *
  * Unlike https://github.com/randomn4me/crontab-to-launchd, we don't treat
  * repeating minutes like `*\/5 * * * *` as a special case of `StartInterval`
  * instead of `StartCalendarInterval` because repeating minutes should still
- * match their clock values modulo the interval. We only use `StartInterval`
- * as a compromise when needed because `StartCalendarInterval` only has minute resolution.
+ * match their clock values modulo the interval. We only use `StartInterval` as
+ * a compromise when needed because `StartCalendarInterval` only has minute
+ * resolution.
  *
  * Launchd doesn't really support ranges like cron, we work around this by
  * generating all permutations required to represent the given range. This
  * creates a risk of combinatorial explosion. This function will throw if a high
  * threshold is exceeded, but the true boundaries of launchd are unknown and
  * apparently undocumented.
- * @throws {Error} if the cron string can't be parsed or is unsupported by launchd
- * @returns the launchd plist fragment
+ *
+ * @returns The launchd plist fragment
+ * @throws {Error} If the cron string can't be parsed or is unsupported by
+ *   launchd
  */
 export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 	// Special case, not supported by cron-parser, but supported by launchd
@@ -192,6 +195,7 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 			if (typeof value !== 'number') {
 				throw new TypeError(`Field ${field} is not a number`)
 			}
+
 			startCalendarIntervalItem[field] = value
 		}
 
@@ -209,10 +213,12 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 
 /**
  * Get a human-readable description of a cron string.
+ *
  * @param cronString - The cron string to describe.
- * @public
+ *
  * @returns A human-readable description of the cron string, or the original
- * string if it can't be parsed or described.
+ *   string if it can't be parsed or described.
+ * @public
  */
 export function getCronStringDescription(cronString: string): string {
 	try {
@@ -224,28 +230,35 @@ export function getCronStringDescription(cronString: string): string {
 
 /**
  * Convert a serialized cron field key to a launchd plist key.
- * @throws {Error} if the cron key is invalid or not supported by launchd
+ *
+ * @throws {Error} If the cron key is invalid or not supported by launchd
  */
 function cronKeyToPlistKey(cronKey: string): string {
 	switch (cronKey) {
 		case 'dayOfMonth': {
 			return 'Day'
 		}
+
 		case 'dayOfWeek': {
 			return 'Weekday'
 		}
+
 		case 'hour': {
 			return 'Hour'
 		}
+
 		case 'month': {
 			return 'Month'
 		}
+
 		case 'second': {
 			throw new Error(`Second values not supported in launchd`)
 		}
+
 		case 'minute': {
 			return 'Minute'
 		}
+
 		default: {
 			throw new Error(`Unsupported cron key: ${cronKey}`)
 		}
@@ -253,10 +266,15 @@ function cronKeyToPlistKey(cronKey: string): string {
 }
 
 /**
- * Validate and extract a consistent second interval from a list of second values, useful
- * for converting second intervals to launchd's StartInterval format.
- * @param values - The list of second values to validate and extract the interval from.
- * @returns The consistent second interval, or undefined if the values are not valid.
+ * Validate and extract a consistent second interval from a list of second
+ * values, useful for converting second intervals to launchd's StartInterval
+ * format.
+ *
+ * @param values - The list of second values to validate and extract the
+ *   interval from.
+ *
+ * @returns The consistent second interval, or undefined if the values are not
+ *   valid.
  */
 function getConsistentSecondInterval(values: number[]): number | undefined {
 	// Can't be a single value
@@ -281,7 +299,9 @@ function getConsistentSecondInterval(values: number[]): number | undefined {
 
 /**
  * Deduplicate weekday values to ensure they are within the range 0-6.
+ *
  * @param values - The list of weekday values to deduplicate.
+ *
  * @returns The deduplicated list of weekday values.
  */
 function deduplicateWeekdays(values: number[]): number[] {

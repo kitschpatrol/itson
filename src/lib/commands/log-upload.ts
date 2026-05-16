@@ -5,6 +5,7 @@ import { S3FolderSync } from '../log-uploader'
 
 /**
  * Upload the logs for a single application
+ *
  * @public
  */
 export async function uploadLogs(appOrTask: ItsonConfigApplication | ItsonConfigTask) {

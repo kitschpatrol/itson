@@ -5,7 +5,6 @@
 import type { Simplify } from 'type-fest'
 
 /**
- *
  * @public
  */
 export type ItsonUpdateStrategyGitHub = {
@@ -19,7 +18,6 @@ export type ItsonUpdateStrategyGitHub = {
 }
 
 /**
- *
  * @public
  */
 export type ItsonUpdateStrategyGitHubPython = {
@@ -32,13 +30,15 @@ export type ItsonUpdateStrategyGitHubPython = {
 
 /**
  * Itson log upload strategy
+ *
  * @public
  */
 export type ItsonLogUploadStrategyS3 = {
 	bucketName: string
 	endpoint: string
 	/**
-	 * Minimatch patterns to ignore when uploading logs. These are applied in addition to a default set of common patterns.
+	 * Minimatch patterns to ignore when uploading logs. These are applied in
+	 * addition to a default set of common patterns.
 	 */
 	ignorePatterns?: string[]
 	localPath: string
@@ -58,10 +58,11 @@ export type ItsonConfigTask = Simplify<
 	ItsonConfigBase & {
 		/**
 		 * Set this to run one-off tasks instead of a persistent application.
-		 * Schedule to run the application at specified times or at `@reboot` (system startup).
-		 * If undefined, the application will run when itson is launched and be kept alive.
-		 * Uses cron syntax (with some edge-case limitations)
-		 * Uses local time, not UTC.
+		 * Schedule to run the application at specified times or at `@reboot`
+		 * (system startup). If undefined, the application will run when itson is
+		 * launched and be kept alive. Uses cron syntax (with some edge-case
+		 * limitations) Uses local time, not UTC.
+		 *
 		 * @default undefined
 		 */
 		schedule: string
@@ -70,6 +71,7 @@ export type ItsonConfigTask = Simplify<
 
 /**
  * Type guard to check if an application is a task.
+ *
  * @public
  */
 export function isTask(application: ItsonConfigApplication | ItsonConfigTask): boolean {
@@ -106,26 +108,31 @@ export const DEFAULT_ITSON_CONFIG = {
 export type ItsonConfig = {
 	/**
 	 * Applications to manage and keep running persistently.
-	 * @default []
+	 *
+	 * @default [ ]
 	 */
 	applications: ItsonConfigApplication[]
 	/**
 	 * Don't wait around for internet access, skip operations that require it.
+	 *
 	 * @default false
 	 */
 	offline: boolean
 	/**
 	 * Register itson to run on startup.
+	 *
 	 * @default false
 	 */
 	runOnStartup: boolean
 	/**
 	 * One-off tasks to run at specified times.
-	 * @default []
+	 *
+	 * @default [ ]
 	 */
 	tasks: ItsonConfigTask[]
 	/**
 	 * Run with verbose logging.
+	 *
 	 * @default false
 	 */
 	verbose: boolean
@@ -133,6 +140,7 @@ export type ItsonConfig = {
 
 /**
  * Itson configuration factory function for type safety.
+ *
  * @public
  */
 export function itsonConfig(config: ItsonConfig): ItsonConfig {

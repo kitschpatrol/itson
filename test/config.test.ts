@@ -11,7 +11,7 @@ describe('isTask', () => {
 			command: 'my-task',
 			name: 'TestTask',
 			schedule: '0 * * * *',
-		} as ItsonConfigTask
+		}
 
 		expect(isTask(task)).toBe(true)
 	})
@@ -32,7 +32,7 @@ describe('isTask', () => {
 			command: 'startup-script',
 			name: 'BootTask',
 			schedule: '@reboot',
-		} as ItsonConfigTask
+		}
 
 		expect(isTask(task)).toBe(true)
 	})
@@ -54,7 +54,7 @@ describe('isApplication', () => {
 			command: 'my-task',
 			name: 'TestTask',
 			schedule: '0 12 * * *',
-		} as ItsonConfigTask
+		}
 
 		expect(isApplication(task)).toBe(false)
 	})

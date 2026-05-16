@@ -5,7 +5,9 @@ import { dirname, join } from 'node:path'
 
 /**
  * Unzip a file on macOS.
+ *
  * @param filePath The path to the file to unzip.
+ *
  * @returns The path to the unzipped file.
  */
 export async function unzip(filePath: string): Promise<string> {
@@ -33,6 +35,7 @@ export async function unzip(filePath: string): Promise<string> {
 			if (line.trim().startsWith('---')) {
 				break
 			}
+
 			// Get the file name, which is everything from the 'Name' column index onwards
 			const name = line.slice(Math.max(0, nameHeaderIndex)).trim()
 			if (name) {
@@ -61,7 +64,9 @@ export async function unzip(filePath: string): Promise<string> {
 
 /**
  * Get the version of a macOS application.
+ *
  * @param filePath The path to the application.
+ *
  * @returns The version of the application.
  */
 export async function getVersion(filePath: string): Promise<string | undefined> {
@@ -83,7 +88,9 @@ export async function getVersion(filePath: string): Promise<string | undefined> 
 
 /**
  * Read a file, but return undefined if the file does not exist.
+ *
  * @param path The path to the file.
+ *
  * @returns The file contents, or undefined if the file does not exist.
  */
 export async function readFileSafe(path: string): Promise<string | undefined> {
@@ -93,13 +100,16 @@ export async function readFileSafe(path: string): Promise<string | undefined> {
 		if (error instanceof Error && error.message.includes('ENOENT')) {
 			return undefined
 		}
+
 		throw error
 	}
 }
 
 /**
  * Delete a file, but ignore errors if the file does not exist.
+ *
  * @param path The path to the file.
+ *
  * @returns True if the file was deleted, false if the file did not exist.
  */
 export async function deleteFileSafe(path: string): Promise<boolean> {
@@ -109,6 +119,7 @@ export async function deleteFileSafe(path: string): Promise<boolean> {
 		if (error instanceof Error && error.message.includes('ENOENT')) {
 			return false
 		}
+
 		throw error
 	}
 
@@ -116,8 +127,9 @@ export async function deleteFileSafe(path: string): Promise<boolean> {
 }
 
 /**
- * Check if the internet is reachable and DNS is working.
- * Currently using is-online instead of this function.
+ * Check if the internet is reachable and DNS is working. Currently using
+ * is-online instead of this function.
+ *
  * @returns True if the internet is reachable, false otherwise.
  * @public
  */
@@ -126,6 +138,7 @@ export async function checkInternetConnectivity() {
 	if (stdout.includes('1 packets received')) {
 		return true
 	}
+
 	log.error(
 		'No internet connectivity detected. Please check your network connection and try again.',
 	)
