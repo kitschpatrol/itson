@@ -23,3 +23,6 @@ vendor/
 # Customizations
 /logs
 .claude/
+
+# Log rotation audit file dropped by lognow when running the CLI locally
+audit.json

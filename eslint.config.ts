@@ -15,10 +15,11 @@ export default eslintConfig(
 		type: 'lib',
 	},
 	{
-		files: ['readme.md/*.js'],
+		files: ['readme.md/*.js', 'readme.md/*.ts'],
 		rules: {
 			'perfectionist/sort-objects': 'off',
 			'require-unicode-regexp': 'off',
+			'ts/consistent-type-imports': 'off',
 		},
 	},
 )

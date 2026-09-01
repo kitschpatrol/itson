@@ -1,5 +1,3 @@
-/* eslint-disable ts/consistent-type-assertions */
-
 /**
  * Tests for service.ts launchd integration.
  *
@@ -44,7 +42,7 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 		name: `E2eApp-${testSuffix}`,
 		command: 'echo',
 		arguments: ['hello-from-itson-test'],
-	} as ItsonConfigApp
+	}
 
 	const testTask: ItsonConfigTask = {
 		name: `E2eTask-${testSuffix}`,

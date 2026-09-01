@@ -1,0 +1,316 @@
+{
+	"$id": "https://raw.githubusercontent.com/kitschpatrol/itson/main/schema.json",
+	"title": "Itson configuration",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"applications": {
+			"description": "Applications to manage and keep running persistently.",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"command": {
+						"type": "string"
+					},
+					"arguments": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"logUpload": {
+						"type": "object",
+						"properties": {
+							"bucketName": {
+								"type": "string"
+							},
+							"endpoint": {
+								"type": "string"
+							},
+							"ignorePatterns": {
+								"description": "Minimatch patterns to ignore when uploading logs. These are applied in addition to a default set of common patterns.",
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"localPath": {
+								"type": "string"
+							},
+							"remotePath": {
+								"type": "string"
+							},
+							"type": {
+								"type": "string",
+								"const": "s3"
+							}
+						},
+						"required": [
+							"bucketName",
+							"endpoint",
+							"localPath",
+							"type"
+						]
+					},
+					"update": {
+						"oneOf": [
+							{
+								"type": "object",
+								"properties": {
+									"artifactPattern": {
+										"description": "Pattern matching the name of the release artifact to download.",
+										"anyOf": [
+											{
+												"type": "string",
+												"format": "regex"
+											},
+											{
+												"type": "string"
+											},
+											{
+												"type": "object",
+												"properties": {
+													"flags": {
+														"type": "string"
+													},
+													"source": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"source"
+												]
+											}
+										]
+									},
+									"destination": {
+										"type": "string"
+									},
+									"owner": {
+										"type": "string"
+									},
+									"repo": {
+										"type": "string"
+									},
+									"type": {
+										"type": "string",
+										"const": "github"
+									},
+									"version": {
+										"description": "If not provided, the latest version will be used.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"artifactPattern",
+									"destination",
+									"owner",
+									"repo",
+									"type"
+								]
+							},
+							{
+								"type": "object",
+								"properties": {
+									"owner": {
+										"type": "string"
+									},
+									"repo": {
+										"type": "string"
+									},
+									"type": {
+										"type": "string",
+										"const": "github-python"
+									},
+									"version": {
+										"description": "If not provided, the latest version will be used.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"owner",
+									"repo",
+									"type"
+								]
+							}
+						]
+					},
+					"schedule": {
+						"description": "Applications must not define a schedule. Use a task instead.",
+						"not": {}
+					}
+				},
+				"required": [
+					"name",
+					"command"
+				]
+			}
+		},
+		"offline": {
+			"default": false,
+			"description": "Don't wait around for internet access, skip operations that require it.",
+			"type": "boolean"
+		},
+		"runOnStartup": {
+			"default": false,
+			"description": "Register itson to run on startup.",
+			"type": "boolean"
+		},
+		"tasks": {
+			"description": "One-off tasks to run at specified times.",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"command": {
+						"type": "string"
+					},
+					"arguments": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"logUpload": {
+						"type": "object",
+						"properties": {
+							"bucketName": {
+								"type": "string"
+							},
+							"endpoint": {
+								"type": "string"
+							},
+							"ignorePatterns": {
+								"description": "Minimatch patterns to ignore when uploading logs. These are applied in addition to a default set of common patterns.",
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"localPath": {
+								"type": "string"
+							},
+							"remotePath": {
+								"type": "string"
+							},
+							"type": {
+								"type": "string",
+								"const": "s3"
+							}
+						},
+						"required": [
+							"bucketName",
+							"endpoint",
+							"localPath",
+							"type"
+						]
+					},
+					"update": {
+						"oneOf": [
+							{
+								"type": "object",
+								"properties": {
+									"artifactPattern": {
+										"description": "Pattern matching the name of the release artifact to download.",
+										"anyOf": [
+											{
+												"type": "string",
+												"format": "regex"
+											},
+											{
+												"type": "string"
+											},
+											{
+												"type": "object",
+												"properties": {
+													"flags": {
+														"type": "string"
+													},
+													"source": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"source"
+												]
+											}
+										]
+									},
+									"destination": {
+										"type": "string"
+									},
+									"owner": {
+										"type": "string"
+									},
+									"repo": {
+										"type": "string"
+									},
+									"type": {
+										"type": "string",
+										"const": "github"
+									},
+									"version": {
+										"description": "If not provided, the latest version will be used.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"artifactPattern",
+									"destination",
+									"owner",
+									"repo",
+									"type"
+								]
+							},
+							{
+								"type": "object",
+								"properties": {
+									"owner": {
+										"type": "string"
+									},
+									"repo": {
+										"type": "string"
+									},
+									"type": {
+										"type": "string",
+										"const": "github-python"
+									},
+									"version": {
+										"description": "If not provided, the latest version will be used.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"owner",
+									"repo",
+									"type"
+								]
+							}
+						]
+					},
+					"schedule": {
+						"type": "string",
+						"description": "Schedule to run the task at specified times or at `@reboot` (system startup). Uses cron syntax (with some edge-case limitations). Uses local time, not UTC."
+					}
+				},
+				"required": [
+					"name",
+					"command",
+					"schedule"
+				]
+			}
+		},
+		"verbose": {
+			"default": false,
+			"description": "Run with verbose logging.",
+			"type": "boolean"
+		}
+	}
+}

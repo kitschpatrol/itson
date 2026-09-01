@@ -5,7 +5,8 @@ import { getJsonFileTransportDestinations, log, setDefaultLogOptions } from 'log
 import os from 'node:os'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import type { ItsonConfig } from '../lib/config'
+import { z } from 'zod'
+import type { ItsonConfigInput } from '../lib/config'
 import { name, version } from '../../package.json'
 import { uploadAllLogs } from '../lib/commands/log-upload'
 import { register } from '../lib/commands/register'
@@ -13,17 +14,26 @@ import { reset } from '../lib/commands/reset'
 import { startAllApps } from '../lib/commands/start'
 import { stopAllApps } from '../lib/commands/stop'
 import { updateAllAppsAndTasks } from '../lib/commands/update'
-import { DEFAULT_ITSON_CONFIG } from '../lib/config'
+import { DEFAULT_ITSON_CONFIG, itsonConfigSchema } from '../lib/config'
 
 setDefaultLogOptions({ logJsonToFile: true, name })
 
 // Config
-const { config, configFile } = await loadConfig<ItsonConfig>({
+const { config: rawConfig, configFile } = await loadConfig<ItsonConfigInput>({
 	cwd: os.homedir(), // Rcfile search in home dir doesn't seem to work...
 	defaultConfig: DEFAULT_ITSON_CONFIG,
 	globalRc: true,
 	name: 'itson',
 })
+
+const parsedConfig = itsonConfigSchema.safeParse(rawConfig)
+if (!parsedConfig.success) {
+	log.error(`Invalid itson configuration${configFile === undefined ? '' : ` at "${configFile}"`}:`)
+	log.error(z.prettifyError(parsedConfig.error))
+	process.exit(1)
+}
+
+const config = parsedConfig.data
 
 const yargsInstance = yargs(hideBin(process.argv))
 

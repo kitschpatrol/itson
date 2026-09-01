@@ -75,7 +75,9 @@ This command runs automatically at system startup when `runOnStartup: true` in y
 
 ### Configuration
 
-Create an `itson.config.js` file in your home directory.
+Create an `itson.config.js`, `itson.config.ts`, or `itson.config.json` file in your home directory.
+
+`~/itson.config.js`:
 
 ```js
 export default {
@@ -119,6 +121,51 @@ Itson works offline, but certain operations (log uploading, application updates)
 "Applications" start whenever `itson` is run, and then run forever and restart automatically if they are closed or crash.
 
 "Tasks" run once at the specified time and then exit.
+
+#### Type checking and validation
+
+Itson validates the configuration each time it runs, and exits with a description of any problems.
+
+Itson also writes type definitions for the config file to `~/.itson` each time it runs. Annotate your config file to get type checking and autocomplete in your editor.
+
+`~/itson.config.ts`:
+
+```ts
+export default {
+  applications: [],
+  tasks: [],
+} satisfies import('./.itson/itson.js').ItsonConfig
+```
+
+In a plain JavaScript config, use the equivalent JSDoc annotation instead (the `// @ts-check` directive makes your editor report errors, not just autocomplete).
+
+`~/itson.config.js`:
+
+```js
+// @ts-check
+
+/** @satisfies {import('./.itson/itson.js').ItsonConfig} */
+const config = {
+  applications: [],
+  tasks: [],
+}
+
+export default config
+```
+
+JSON configs can reference the schema instead. (A `~/itson.config.jsonc` file also works, if you'd like comments alongside the schema.)
+
+`~/itson.config.json`:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/kitschpatrol/itson/main/schema.json",
+  "applications": [],
+  "tasks": []
+}
+```
+
+In JSON, regular expression values like `artifactPattern` are written as a pattern source string (`"^AllWork.+\\.zip$"`), or as an object when flags are needed (`{ "source": "^allwork.+\\.zip$", "flags": "i" }`).
 
 ### Commands
 

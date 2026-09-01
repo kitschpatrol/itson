@@ -59,6 +59,9 @@ importers:
       yargs:
         specifier: ^18.1.0
         version: 18.1.0
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
     devDependencies:
       '@kitschpatrol/shared-config':
         specifier: ^8.7.0
@@ -87,9 +90,6 @@ importers:
       tsdown:
         specifier: ^0.22.14
         version: 0.22.14(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@6.0.3)
-      type-fest:
-        specifier: ^5.9.0
-        version: 5.9.0
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
