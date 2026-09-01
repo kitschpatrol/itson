@@ -11,18 +11,18 @@ import { dirname, join } from 'node:path'
  * @returns The path to the unzipped file.
  */
 export async function unzip(filePath: string): Promise<string> {
-	const extractTo = dirname(filePath)
-
 	if (process.platform !== 'darwin') {
 		throw new Error('Unzipping is currently only supported on macOS.')
 	}
+
+	const extractTo = dirname(filePath)
 
 	try {
 		const { stdout } = await execa('unzip', ['-l', filePath])
 		const lines = stdout.split('\n')
 
 		// The header is in lines[1], e.g. '  Length      Date    Time    Name'
-		const nameHeaderIndex = lines[1].indexOf('Name')
+		const nameHeaderIndex = lines[1]?.indexOf('Name') ?? -1
 		if (nameHeaderIndex === -1) {
 			throw new Error('Could not determine file list from unzip output.')
 		}
@@ -32,15 +32,15 @@ export async function unzip(filePath: string): Promise<string> {
 		for (let i = 3; i < lines.length; i++) {
 			const line = lines[i]
 			// The list is terminated by a line of dashes
-			if (line.trim().startsWith('---')) {
+			if (line === undefined || line.trimStart().startsWith('---')) {
 				break
 			}
 
 			// Get the file name, which is everything from the 'Name' column index onwards
 			const name = line.slice(Math.max(0, nameHeaderIndex)).trim()
-			if (name) {
+			if (name.length > 0) {
 				// We only care about the top-level directory or file
-				topLevelItem = name.split('/')[0]
+				topLevelItem = name.split('/', 1)[0] ?? ''
 				break // Found the first item, we can stop
 			}
 		}
@@ -49,7 +49,7 @@ export async function unzip(filePath: string): Promise<string> {
 		log.debug(`Unzipped ${filePath} to ${extractTo}`)
 		await deleteFileSafe(filePath)
 
-		if (!topLevelItem) {
+		if (topLevelItem.length === 0) {
 			log.warn(`Could not determine top-level item in ${filePath}.`)
 			return extractTo
 		}

@@ -26,7 +26,7 @@ const IGNORE_PATTERNS = [
 	'**/.env*',
 ]
 
-const TRAILING_SLASH_REGEX = /\/$/
+const TRAILING_SLASH_REGEX = /\/$/v
 
 export class S3FolderSync {
 	private static get keychainAccessKeyAccount() {
@@ -52,8 +52,8 @@ export class S3FolderSync {
 	 * Clear stored credentials (useful for switching accounts or troubleshooting)
 	 */
 	static async clearCredentials(): Promise<void> {
-		await keytar.deletePassword(KEYCHAIN_SERVICE, S3FolderSync.keychainAccessKeyAccount)
-		await keytar.deletePassword(KEYCHAIN_SERVICE, S3FolderSync.keychainSecretKeyAccount)
+		await keytar.deletePassword(KEYCHAIN_SERVICE, this.keychainAccessKeyAccount)
+		await keytar.deletePassword(KEYCHAIN_SERVICE, this.keychainSecretKeyAccount)
 
 		log.info('S3 credentials cleared from keychain.')
 	}
@@ -62,24 +62,20 @@ export class S3FolderSync {
 	 * Get S3 access key ID from keychain or prompt for it
 	 */
 	private static async getAccessKeyId(): Promise<string | undefined> {
-		let accessKeyId = await keytar.getPassword(
-			KEYCHAIN_SERVICE,
-			S3FolderSync.keychainAccessKeyAccount,
-		)
+		let accessKeyId =
+			(await keytar.getPassword(KEYCHAIN_SERVICE, this.keychainAccessKeyAccount)) ?? undefined
 
-		if (!accessKeyId) {
+		if (accessKeyId === undefined || accessKeyId.length === 0) {
 			log.warn('S3 Access Key ID not found')
 
 			const newAccessKeyId = await text({
 				message: 'Please enter your S3 Access Key ID:',
 				validate(value: string | undefined) {
-					if (!value) {
+					if (value === undefined || value.length === 0) {
 						return 'An access key ID is required.'
 					}
 
-					if (value.length < 10) {
-						return 'Please enter a valid S3 Access Key ID.'
-					}
+					return value.length < 10 ? 'Please enter a valid S3 Access Key ID.' : undefined
 				},
 			})
 
@@ -89,7 +85,7 @@ export class S3FolderSync {
 			}
 
 			accessKeyId = newAccessKeyId
-			await keytar.setPassword(KEYCHAIN_SERVICE, S3FolderSync.keychainAccessKeyAccount, accessKeyId)
+			await keytar.setPassword(KEYCHAIN_SERVICE, this.keychainAccessKeyAccount, accessKeyId)
 			log.info('S3 Access Key ID saved securely in your keychain.')
 		}
 
@@ -100,24 +96,20 @@ export class S3FolderSync {
 	 * Get S3 secret access key from keychain or prompt for it
 	 */
 	private static async getSecretAccessKey(): Promise<string | undefined> {
-		let secretAccessKey = await keytar.getPassword(
-			KEYCHAIN_SERVICE,
-			S3FolderSync.keychainSecretKeyAccount,
-		)
+		let secretAccessKey =
+			(await keytar.getPassword(KEYCHAIN_SERVICE, this.keychainSecretKeyAccount)) ?? undefined
 
-		if (!secretAccessKey) {
+		if (secretAccessKey === undefined || secretAccessKey.length === 0) {
 			log.info('S3 Secret Access Key not found')
 
 			const newSecretAccessKey = await text({
 				message: 'Please enter your S3 Secret Access Key:',
 				validate(value: string | undefined) {
-					if (!value) {
+					if (value === undefined || value.length === 0) {
 						return 'A secret access key is required.'
 					}
 
-					if (value.length < 20) {
-						return 'Please enter a valid S3 Secret Access Key.'
-					}
+					return value.length < 20 ? 'Please enter a valid S3 Secret Access Key.' : undefined
 				},
 			})
 
@@ -127,11 +119,7 @@ export class S3FolderSync {
 			}
 
 			secretAccessKey = newSecretAccessKey
-			await keytar.setPassword(
-				KEYCHAIN_SERVICE,
-				S3FolderSync.keychainSecretKeyAccount,
-				secretAccessKey,
-			)
+			await keytar.setPassword(KEYCHAIN_SERVICE, this.keychainSecretKeyAccount, secretAccessKey)
 			log.info('S3 Secret Access Key saved securely in your keychain.')
 		}
 
@@ -197,7 +185,9 @@ export class S3FolderSync {
 			const hash = createHash('md5')
 			const stream = createReadStream(filePath)
 
-			stream.on('data', (data) => hash.update(data))
+			stream.on('data', (data) => {
+				hash.update(data)
+			})
 			stream.on('end', () => {
 				resolve(hash.digest('hex'))
 			})
@@ -254,7 +244,11 @@ export class S3FolderSync {
 
 			if (response.Contents) {
 				for (const object of response.Contents) {
-					if (object.Key && object.LastModified && object.ETag) {
+					if (
+						object.Key !== undefined &&
+						object.LastModified !== undefined &&
+						object.ETag !== undefined
+					) {
 						remoteFiles.set(object.Key, {
 							etag: object.ETag.replaceAll('"', ''), // Remove quotes from ETag
 							lastModified: object.LastModified,
@@ -264,7 +258,7 @@ export class S3FolderSync {
 			}
 
 			continuationToken = response.NextContinuationToken
-		} while (continuationToken)
+		} while (continuationToken !== undefined)
 
 		return remoteFiles
 	}
@@ -276,9 +270,9 @@ export class S3FolderSync {
 		const relativePath = relative(this.config.localPath, localFilePath)
 		const remoteKey = relativePath.split(sep).join('/') // Ensure forward slashes
 
-		return this.config.remotePath
-			? `${this.config.remotePath.replace(TRAILING_SLASH_REGEX, '')}/${remoteKey}`
-			: remoteKey
+		return this.config.remotePath === undefined || this.config.remotePath.length === 0
+			? remoteKey
+			: `${this.config.remotePath.replace(TRAILING_SLASH_REGEX, '')}/${remoteKey}`
 	}
 
 	/**
@@ -292,7 +286,7 @@ export class S3FolderSync {
 		const accessKeyId = await S3FolderSync.getAccessKeyId()
 		const secretAccessKey = await S3FolderSync.getSecretAccessKey()
 
-		if (!accessKeyId || !secretAccessKey) {
+		if (accessKeyId === undefined || secretAccessKey === undefined) {
 			return false
 		}
 

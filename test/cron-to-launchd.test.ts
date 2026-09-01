@@ -8,15 +8,15 @@ import { cronToPlistFragment } from '../src/lib/utilities/cron-to-launchd'
 /**
  * Helper to parse crontab and generate XML
  */
-function parseAndGenerate(crontabExpr: string): [LaunchdPlistFragment, string] {
-	const entry = cronToPlistFragment(crontabExpr)
+function parseAndGenerate(crontabExpression: string): [LaunchdPlistFragment, string] {
+	const entry = cronToPlistFragment(crontabExpression)
 	const xmlOutput = build(entry)
 
 	return [entry, xmlOutput]
 }
 
-const PLIST_START_CALENDAR_INTERVAL_REGEX = /<key>StartCalendarInterval<\/key>\s*<(array|dict)>/
-const PLIST_ARRAY_REGEX = /<array>([\s\S]*?)<\/array>/
+const PLIST_START_CALENDAR_INTERVAL_REGEX = /<key>StartCalendarInterval<\/key>\s*<(array|dict)>/v
+const PLIST_ARRAY_REGEX = /<array>([\s\S]*?)<\/array>/v
 
 /**
  * Count the number of scheduling intervals (Calendar or Start)
@@ -46,8 +46,8 @@ function countIntervals(xmlOutput: string): number {
 		)
 		const arrayMatch = PLIST_ARRAY_REGEX.exec(afterKey)
 		if (arrayMatch) {
-			const arrayContent = arrayMatch[1]
-			const dictMatches = arrayContent.match(/<dict>/g)
+			const arrayContent = arrayMatch[1] ?? ''
+			const dictMatches = arrayContent.match(/<dict>/gv)
 			return dictMatches ? dictMatches.length : 0
 		}
 	} else if (nextTag === 'dict') {
@@ -71,10 +71,10 @@ describe('ComprehensivePatterns', () => {
 				['59 * * * *', 1], // End of hour
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [entry, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [entry, xml] = parseAndGenerate(cronExpression)
 
-				expect([0, 30, 59]).toContain(entry.StartCalendarInterval![0].Minute)
+				expect([0, 30, 59]).toContain(entry.StartCalendarInterval?.[0]?.Minute)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -87,8 +87,8 @@ describe('ComprehensivePatterns', () => {
 				['0-59 * * * *', 60], // Full range
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -101,8 +101,8 @@ describe('ComprehensivePatterns', () => {
 				['5,10,15,20,25 * * * *', 5], // Five values
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [_, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [_, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -119,8 +119,8 @@ describe('ComprehensivePatterns', () => {
 				['10-50/10 0 * * *', 5], // Every 10 minutes from 10-50 at hour 0
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				const intervals = countIntervals(xml)
 				expect(intervals).toBe(expectedIntervals)
 			}
@@ -136,9 +136,9 @@ describe('ComprehensivePatterns', () => {
 				['0 23 * * *', 1], // End of day
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [entry, xml] = parseAndGenerate(cronExpr)
-				expect([0, 12, 23]).toContain(entry.StartCalendarInterval![0].Hour)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [entry, xml] = parseAndGenerate(cronExpression)
+				expect([0, 12, 23]).toContain(entry.StartCalendarInterval?.[0]?.Hour)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -151,8 +151,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0-23 * * *', 24], // Full day
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -164,8 +164,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0,6,12,18 * * *', 4], // Four times daily
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -180,8 +180,8 @@ describe('ComprehensivePatterns', () => {
 				['0 8-20/2 * * *', 7], // Every 2 hours from 8-20
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -196,9 +196,9 @@ describe('ComprehensivePatterns', () => {
 				['0 0 31 * *', 1], // End of month
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [entry, xml] = parseAndGenerate(cronExpr)
-				expect([1, 15, 31]).toContain(entry.StartCalendarInterval![0].Day)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [entry, xml] = parseAndGenerate(cronExpression)
+				expect([1, 15, 31]).toContain(entry.StartCalendarInterval?.[0]?.Day)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -211,8 +211,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 1-31 * *', 31], // Full month
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -224,8 +224,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 1,8,15,22 * *', 4], // Weekly-ish
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -238,8 +238,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 1-15/3 * *', 5], // Every 3 days for first half
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toEqual(expectedIntervals)
 			}
 		})
@@ -254,9 +254,9 @@ describe('ComprehensivePatterns', () => {
 				['0 0 1 12 *', 1], // December
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [entry, xml] = parseAndGenerate(cronExpr)
-				expect([1, 6, 12]).toContain(entry.StartCalendarInterval![0].Month)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [entry, xml] = parseAndGenerate(cronExpression)
+				expect([1, 6, 12]).toContain(entry.StartCalendarInterval?.[0]?.Month)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -269,8 +269,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 1 1-12 *', 12], // Full year
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -282,8 +282,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 1 1,3,5,7,9,11 *', 6], // Odd months
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -297,8 +297,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 1 1-6/2 *', 3], // Every other month, first half
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -314,9 +314,9 @@ describe('ComprehensivePatterns', () => {
 				['0 0 * * 7', 1], // Sunday (alternative)
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [entry, xml] = parseAndGenerate(cronExpr)
-				expect([0, 1, 5, 7]).toContain(entry.StartCalendarInterval![0].Weekday)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [entry, xml] = parseAndGenerate(cronExpression)
+				expect([0, 1, 5, 7]).toContain(entry.StartCalendarInterval?.[0]?.Weekday)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -329,8 +329,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 * * 2-4', 3], // Tue-Thu
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -343,8 +343,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 * * 1,2,3,4,5', 5], // Weekdays
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -356,8 +356,8 @@ describe('ComprehensivePatterns', () => {
 				['0 0 * * 1-5/2', 3], // Every other weekday (1,3,5)
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBe(expectedIntervals)
 			}
 		})
@@ -392,8 +392,8 @@ describe('ComprehensivePatterns', () => {
 				['30 */2 * * 6,0', 24], // Every 2hrs at :30 on weekends (12*2=24)
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [_, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [_, xml] = parseAndGenerate(cronExpression)
 				const intervals = countIntervals(xml)
 				expect(intervals).toBe(expectedIntervals)
 			}
@@ -417,8 +417,8 @@ describe('ComprehensivePatterns', () => {
 				['0-0/1 0-0/1 1-1/1 1-1/1 0-0/1', 1], // Single value ranges with step
 			]
 
-			for (const [cronExpr, expectedIntervals] of testCases) {
-				const [, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression, expectedIntervals] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				expect(countIntervals(xml)).toBeGreaterThanOrEqual(expectedIntervals)
 			}
 		})
@@ -435,8 +435,8 @@ describe('ComprehensivePatterns', () => {
 			const [entry2, xml2] = parseAndGenerate('0 0 * * 7')
 
 			// Both should parse successfully
-			expect(entry1.StartCalendarInterval![0].Weekday).toBe(0)
-			expect(entry2.StartCalendarInterval![0].Weekday).toBe(0)
+			expect(entry1.StartCalendarInterval?.[0]?.Weekday).toBe(0)
+			expect(entry2.StartCalendarInterval?.[0]?.Weekday).toBe(0)
 
 			// Both should generate valid XML
 			expect(countIntervals(xml1)).toBe(1)
@@ -446,8 +446,8 @@ describe('ComprehensivePatterns', () => {
 		it('should handle February 29th', () => {
 			// This should work even though Feb 29 doesn't exist every year
 			const [entry, xml] = parseAndGenerate('0 0 29 2 *')
-			expect(entry.StartCalendarInterval![0].Day).toBe(29)
-			expect(entry.StartCalendarInterval![0].Month).toBe(2)
+			expect(entry.StartCalendarInterval?.[0]?.Day).toBe(29)
+			expect(entry.StartCalendarInterval?.[0]?.Month).toBe(2)
 			expect(countIntervals(xml)).toBe(1)
 		})
 
@@ -475,8 +475,8 @@ describe('ComprehensivePatterns', () => {
 				// ['0-59 0-23 1-31 1-12 0-6', 'Full ranges'], // This throws..., different from upstream implementation...
 			]
 
-			for (const [cronExpr, _] of testCases) {
-				const [_, xml] = parseAndGenerate(cronExpr)
+			for (const [cronExpression] of testCases) {
+				const [, xml] = parseAndGenerate(cronExpression)
 				// Should complete without error, even if it generates many intervals
 				expect(xml.length).toBeGreaterThan(0)
 			}
@@ -745,7 +745,6 @@ describe('Seconds field', () => {
 			try {
 				parseAndGenerate(cronString)
 			} catch (error) {
-				// eslint-disable-next-line ts/no-unsafe-type-assertion
 				results.set(cronString, (error as Error).message)
 			}
 		}

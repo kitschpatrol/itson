@@ -1,4 +1,4 @@
-/* eslint-disable ts/no-unsafe-type-assertion, ts/consistent-type-assertions */
+/* eslint-disable ts/consistent-type-assertions */
 
 /**
  * Tests for service.ts launchd integration.
@@ -16,7 +16,7 @@ import { readFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import type { ItsonConfigApplication, ItsonConfigTask } from '../src/lib/config'
+import type { ItsonConfigApp, ItsonConfigTask } from '../src/lib/config'
 
 const describeOnMac = process.platform === 'darwin' ? describe : describe.skip
 
@@ -40,16 +40,16 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 	// Use a unique name to avoid collisions with real services
 	const testSuffix = `test-${Date.now()}`
 
-	const testApp: ItsonConfigApplication = {
-		arguments: ['hello-from-itson-test'],
-		command: 'echo',
+	const testApp: ItsonConfigApp = {
 		name: `E2eApp-${testSuffix}`,
-	} as ItsonConfigApplication
+		command: 'echo',
+		arguments: ['hello-from-itson-test'],
+	} as ItsonConfigApp
 
 	const testTask: ItsonConfigTask = {
-		arguments: ['task-output'],
-		command: 'echo',
 		name: `E2eTask-${testSuffix}`,
+		command: 'echo',
+		arguments: ['task-output'],
 		schedule: '0 0 31 12 *', // Dec 31 midnight - won't actually fire during test
 	}
 
@@ -124,7 +124,7 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 			const { startService } = await import('../src/lib/service')
 
 			// Calling startService again should not throw
-			await startService(testApp)
+			await expect(startService(testApp)).resolves.toBeUndefined()
 		})
 	})
 
@@ -137,7 +137,7 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 			const { stopService } = await import('../src/lib/service')
 
 			// Should not throw even if service is already stopped
-			await stopService(testApp)
+			await expect(stopService(testApp)).resolves.toBeUndefined()
 		})
 	})
 

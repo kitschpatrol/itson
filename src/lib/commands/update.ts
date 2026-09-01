@@ -18,24 +18,24 @@ import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
 import { getVersion, unzip } from '../../lib/utilities.js'
 
 const GITHUB_PAT_ACCOUNT = 'github-pat'
-const V_PREFIX_REGEX = /^v/
+const V_PREFIX_REGEX = /^v/v
 
 async function getGitHubPat(): Promise<string | undefined> {
-	let pat = await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)
+	let pat = (await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)) ?? undefined
 
-	if (!pat) {
+	if (pat === undefined || pat.length === 0) {
 		log.warn('GitHub Personal Access Token not found')
 
 		const newPat = await text({
 			message: 'Please enter your GitHub Personal Access Token (PAT) with `repo` scope:',
 			validate(value: string | undefined) {
-				if (!value) {
+				if (value === undefined || value.length === 0) {
 					return 'A token is required.'
 				}
 
-				if (!value.startsWith('github_pat_')) {
-					return 'Please enter a valid GitHub Personal Access Token.'
-				}
+				return value.startsWith('github_pat_')
+					? undefined
+					: 'Please enter a valid GitHub Personal Access Token.'
 			},
 		})
 
@@ -71,7 +71,7 @@ type GitHubRelease = {
  */
 export async function getAllReleases(owner: string, repo: string): Promise<GitHubRelease[]> {
 	const pat = await getGitHubPat()
-	if (!pat) {
+	if (pat === undefined) {
 		return []
 	}
 
@@ -115,7 +115,7 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
  */
 async function getLatestRelease(owner: string, repo: string): Promise<GitHubRelease | undefined> {
 	const pat = await getGitHubPat()
-	if (!pat) {
+	if (pat === undefined) {
 		return
 	}
 
@@ -148,6 +148,7 @@ async function getLatestRelease(owner: string, repo: string): Promise<GitHubRele
 		log.error(
 			`Error fetching latest release for ${owner}/${repo}: ${error instanceof Error ? error.message : String(error)}`,
 		)
+		return undefined
 	}
 }
 
@@ -162,7 +163,7 @@ export async function getBestReleaseForConstraint(
 	versionConstraint?: string,
 ): Promise<GitHubRelease | undefined> {
 	// If no constraint provided, use latest release
-	if (!versionConstraint) {
+	if (versionConstraint === undefined || versionConstraint.length === 0) {
 		return getLatestRelease(owner, repo)
 	}
 
@@ -174,8 +175,8 @@ export async function getBestReleaseForConstraint(
 	// Filter releases that satisfy the constraint and sort by version (highest first)
 	const satisfyingReleases = allReleases
 		.filter((release) => {
-			const version = semver.valid(release.version)
-			return version && semver.satisfies(version, versionConstraint)
+			const version = semver.valid(release.version) ?? undefined
+			return version !== undefined && semver.satisfies(version, versionConstraint)
 		})
 		.toSorted((a, b) => semver.rcompare(a.version, b.version))
 
@@ -212,9 +213,9 @@ async function updateFromGitHubPythonRelease(
 	// If we have a local version and an EXACT version constraint, check if it matches
 	// For range constraints (^, ~, etc.), we still want aggressive updates within the range
 	if (
-		localVersion &&
-		versionConstraint &&
-		semver.valid(versionConstraint) &&
+		localVersion !== undefined &&
+		versionConstraint !== undefined &&
+		semver.valid(versionConstraint) !== null &&
 		semver.eq(localVersion, versionConstraint)
 	) {
 		log.info(`${name} is already at the exact version specified: ${localVersion}.`)
@@ -229,7 +230,7 @@ async function updateFromGitHubPythonRelease(
 
 	// If we have a constraint, check if the release is different from local
 	// For exact versions, allow downgrades; for ranges, only upgrade
-	if (localVersion && versionConstraint) {
+	if (localVersion !== undefined && versionConstraint !== undefined) {
 		// Check if this is an exact version using semver API
 		const isExactVersion = semver.valid(versionConstraint) !== null
 		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
@@ -243,18 +244,22 @@ async function updateFromGitHubPythonRelease(
 	}
 
 	// If no constraint but local version is same or newer than release, skip
-	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
+	if (
+		localVersion !== undefined &&
+		versionConstraint === undefined &&
+		!semver.gt(release.version, localVersion)
+	) {
 		log.info(`${name} is already up to date with version ${localVersion}.`)
 		return
 	}
 
-	const isDowngrade = localVersion && semver.lt(release.version, localVersion)
+	const isDowngrade = localVersion !== undefined && semver.lt(release.version, localVersion)
 	const action = isDowngrade ? 'Downgrading to' : 'Installing'
 	log.info(
-		`${action} release version: ${release.version}${versionConstraint ? ` (satisfies ${versionConstraint})` : ''}`,
+		`${action} release version: ${release.version}${versionConstraint === undefined ? '' : ` (satisfies ${versionConstraint})`}`,
 	)
 	const pat = await getGitHubPat()
-	if (!pat) {
+	if (pat === undefined) {
 		return
 	}
 
@@ -310,6 +315,7 @@ async function downloadReleaseAsset(
 		return filePath
 	} catch (error) {
 		log.error(`Error downloading asset: ${error instanceof Error ? error.message : String(error)}`)
+		return undefined
 	}
 }
 
@@ -335,9 +341,9 @@ export async function updateFromGitHubRelease(
 	// If we have a local version and an EXACT version constraint, check if it matches
 	// For range constraints (^, ~, etc.), we still want aggressive updates within the range
 	if (
-		localVersion &&
-		versionConstraint &&
-		semver.valid(versionConstraint) &&
+		localVersion !== undefined &&
+		versionConstraint !== undefined &&
+		semver.valid(versionConstraint) !== null &&
 		semver.eq(localVersion, versionConstraint)
 	) {
 		log.info(`${name} is already at the exact version specified: ${localVersion}.`)
@@ -352,7 +358,7 @@ export async function updateFromGitHubRelease(
 
 	// If we have a constraint, check if the release is different from local
 	// For exact versions, allow downgrades; for ranges, only upgrade
-	if (localVersion && versionConstraint) {
+	if (localVersion !== undefined && versionConstraint !== undefined) {
 		// Check if this is an exact version using semver API
 		const isExactVersion = semver.valid(versionConstraint) !== null
 		if (!isExactVersion && !semver.gt(release.version, localVersion)) {
@@ -366,7 +372,11 @@ export async function updateFromGitHubRelease(
 	}
 
 	// If no constraint but local version is same or newer than release, skip
-	if (localVersion && !versionConstraint && !semver.gt(release.version, localVersion)) {
+	if (
+		localVersion !== undefined &&
+		versionConstraint === undefined &&
+		!semver.gt(release.version, localVersion)
+	) {
 		log.info(`${name} is already up to date with version ${localVersion}.`)
 		return downloadedPaths
 	}
@@ -382,18 +392,18 @@ export async function updateFromGitHubRelease(
 		return downloadedPaths
 	}
 
-	const isDowngrade = localVersion && semver.lt(release.version, localVersion)
+	const isDowngrade = localVersion !== undefined && semver.lt(release.version, localVersion)
 	const action = isDowngrade ? 'Downgrading to' : 'Upgrading to'
 	log.info(
-		`${action} release version: ${release.version}${versionConstraint ? ` (satisfies ${versionConstraint})` : ''}`,
+		`${action} release version: ${release.version}${versionConstraint === undefined ? '' : ` (satisfies ${versionConstraint})`}`,
 	)
 	log.withMetadata(filteredArtifacts).debug('Release artifacts:')
 
 	const pat = await getGitHubPat()
-	if (pat) {
+	if (pat !== undefined) {
 		for (const artifact of filteredArtifacts) {
 			let downloadedPath = await downloadReleaseAsset(artifact, pat)
-			if (downloadedPath && destination) {
+			if (downloadedPath !== undefined && destination.length > 0) {
 				const destinationPath = destination
 				await rm(destinationPath, { force: true, recursive: true })
 				await rename(downloadedPath, destinationPath)
@@ -421,7 +431,7 @@ export async function updateAllAppsAndTasks(config: ItsonConfig) {
 
 	const appsAndTasks = [...config.applications, ...config.tasks]
 
-	if (!appsAndTasks.some((appOrTask) => appOrTask.update !== undefined)) {
+	if (appsAndTasks.every((appOrTask) => appOrTask.update === undefined)) {
 		log.info('No apps or tasks have defined update strategies. Skipping app and task updates.')
 		return
 	}
@@ -445,14 +455,14 @@ export async function updateAllAppsAndTasks(config: ItsonConfig) {
 
 				for (const downloadedPath of downloadedPaths) {
 					// eslint-disable-next-line max-depth
-					if (downloadedPath) {
+					if (downloadedPath === undefined) {
+						log.error(`No downloaded path for ${appOrTask.name}`)
+					} else {
 						const version = await getVersion(downloadedPath)
 						// eslint-disable-next-line max-depth
-						if (version) {
+						if (version !== undefined) {
 							log.info(`Version of ${appOrTask.name}: ${version}`)
 						}
-					} else {
-						log.error(`No downloaded path for ${appOrTask.name}`)
 					}
 				}
 				// eslint-disable-next-line ts/no-unnecessary-condition

@@ -1,15 +1,15 @@
-/* eslint-disable ts/no-unsafe-type-assertion, ts/consistent-type-assertions */
+/* eslint-disable ts/consistent-type-assertions */
 
 import { describe, expect, it } from 'vitest'
-import type { ItsonConfigApplication, ItsonConfigTask } from '../src/lib/config'
-import { DEFAULT_ITSON_CONFIG, isApplication, isTask, itsonConfig } from '../src/lib/config'
+import type { ItsonConfigApp, ItsonConfigTask } from '../src/lib/config'
+import { DEFAULT_ITSON_CONFIG, isApp, isTask, itsonConfig } from '../src/lib/config'
 
 describe('isTask', () => {
 	it('should return true for items with a schedule', () => {
 		const task: ItsonConfigTask = {
-			arguments: [],
-			command: 'my-task',
 			name: 'TestTask',
+			command: 'my-task',
+			arguments: [],
 			schedule: '0 * * * *',
 		}
 
@@ -19,18 +19,18 @@ describe('isTask', () => {
 	it('should return false for items without a schedule', () => {
 		// The schedule: never type means we must cast through unknown
 		const app = {
-			arguments: [],
-			command: 'my-app',
 			name: 'TestApp',
-		} as unknown as ItsonConfigApplication
+			command: 'my-app',
+			arguments: [],
+		} as unknown as ItsonConfigApp
 
 		expect(isTask(app)).toBe(false)
 	})
 
 	it('should return true for @reboot schedule', () => {
 		const task: ItsonConfigTask = {
-			command: 'startup-script',
 			name: 'BootTask',
+			command: 'startup-script',
 			schedule: '@reboot',
 		}
 
@@ -38,25 +38,25 @@ describe('isTask', () => {
 	})
 })
 
-describe('isApplication', () => {
+describe('isApp', () => {
 	it('should return true for items without a schedule', () => {
 		const app = {
-			arguments: [],
-			command: 'my-app',
 			name: 'TestApp',
-		} as unknown as ItsonConfigApplication
+			command: 'my-app',
+			arguments: [],
+		} as unknown as ItsonConfigApp
 
-		expect(isApplication(app)).toBe(true)
+		expect(isApp(app)).toBe(true)
 	})
 
 	it('should return false for items with a schedule', () => {
 		const task: ItsonConfigTask = {
-			command: 'my-task',
 			name: 'TestTask',
+			command: 'my-task',
 			schedule: '0 12 * * *',
 		}
 
-		expect(isApplication(task)).toBe(false)
+		expect(isApp(task)).toBe(false)
 	})
 })
 
@@ -82,16 +82,16 @@ describe('itsonConfig', () => {
 		const config = {
 			applications: [
 				{
-					command: 'my-app',
 					name: 'App1',
-				} as ItsonConfigApplication,
+					command: 'my-app',
+				} as ItsonConfigApp,
 			],
 			offline: true,
 			runOnStartup: true,
 			tasks: [
 				{
-					command: 'my-task',
 					name: 'Task1',
+					command: 'my-task',
 					schedule: '@daily',
 				} as ItsonConfigTask,
 			],

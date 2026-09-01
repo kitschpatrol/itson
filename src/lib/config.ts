@@ -47,10 +47,10 @@ export type ItsonLogUploadStrategyS3 = {
 }
 
 type ItsonConfigBase = {
-	arguments?: string[]
-	command: string
-	logUpload?: ItsonLogUploadStrategyS3
 	name: string
+	command: string
+	arguments?: string[]
+	logUpload?: ItsonLogUploadStrategyS3
 	update?: ItsonUpdateStrategyGitHub | ItsonUpdateStrategyGitHubPython
 }
 
@@ -74,21 +74,21 @@ export type ItsonConfigTask = Simplify<
  *
  * @public
  */
-export function isTask(application: ItsonConfigApplication | ItsonConfigTask): boolean {
-	return typeof application.schedule === 'string'
+export function isTask(app: ItsonConfigApp | ItsonConfigTask): boolean {
+	return typeof app.schedule === 'string'
 }
 
 /**
  * Type guard to check if an application is an application.
  */
-export function isApplication(application: ItsonConfigApplication | ItsonConfigTask): boolean {
-	return typeof application.schedule !== 'string'
+export function isApp(app: ItsonConfigApp | ItsonConfigTask): boolean {
+	return typeof app.schedule !== 'string'
 }
 
 /**
  * @public
  */
-export type ItsonConfigApplication = Simplify<
+export type ItsonConfigApp = Simplify<
 	ItsonConfigBase & {
 		schedule: never
 	}
@@ -111,7 +111,7 @@ export type ItsonConfig = {
 	 *
 	 * @default [ ]
 	 */
-	applications: ItsonConfigApplication[]
+	applications: ItsonConfigApp[]
 	/**
 	 * Don't wait around for internet access, skip operations that require it.
 	 *

@@ -5,11 +5,11 @@ import { stopService } from '../service'
 /**
  * Stop all applications
  */
-export async function stopAllApplications(config: ItsonConfig) {
+export async function stopAllApps(config: ItsonConfig) {
 	log.info('Stopping all applications')
 
 	// Stop all applications (not tasks!)
-	for (const application of config.applications) {
-		await stopService(application)
+	for (const app of config.applications) {
+		await stopService(app)
 	}
 }

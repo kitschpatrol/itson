@@ -3,12 +3,12 @@ import { log } from 'lognow'
 import { glob, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import type { ItsonConfig, ItsonConfigApplication, ItsonConfigTask } from './config'
-import { isApplication, isTask } from './config'
+import type { ItsonConfig, ItsonConfigApp, ItsonConfigTask } from './config'
+import { isApp, isTask } from './config'
 import { deleteFileSafe, readFileSafe } from './utilities'
-import { createApplicationPlist } from './utilities/plist-builder'
+import { createAppPlist } from './utilities/plist-builder'
 
-function getServiceLabel(item: ItsonConfigApplication | ItsonConfigTask): string {
+function getServiceLabel(item: ItsonConfigApp | ItsonConfigTask): string {
 	return `com.itson.${isTask(item) ? 'task' : 'app'}.${item.name}`
 }
 
@@ -34,7 +34,7 @@ async function getServiceState(label: string): Promise<{ isLoaded: boolean; isRu
  *
  * @public
  */
-export async function startService(appOrTask: ItsonConfigApplication | ItsonConfigTask) {
+export async function startService(appOrTask: ItsonConfigApp | ItsonConfigTask) {
 	if (process.platform !== 'darwin') {
 		throw new Error('Daemonization is currently only supported on macOS.')
 	}
@@ -49,10 +49,10 @@ export async function startService(appOrTask: ItsonConfigApplication | ItsonConf
 	// Use the invoking user's PATH to ensure the service can find node and such...
 	const { stdout: userPath } = await execa('echo $PATH', { shell: true })
 
-	const plistContent = createApplicationPlist({
+	const plistContent = createAppPlist({
 		arguments: appOrTask.arguments,
 		command: appOrTask.command,
-		keepAlive: isApplication(appOrTask),
+		keepAlive: isApp(appOrTask),
 		label,
 		schedule: appOrTask.schedule,
 		userPath,
@@ -97,7 +97,7 @@ export async function startService(appOrTask: ItsonConfigApplication | ItsonConf
 
 		// Applications start immediately and will keep running.
 		// Tasks don't!
-		if (isApplication(appOrTask)) {
+		if (isApp(appOrTask)) {
 			if (isRunning) {
 				log.debug(`Service ${label} is already running, not starting again.`)
 			} else {
@@ -123,34 +123,30 @@ export async function unregisterOrphans(config: ItsonConfig): Promise<number> {
 
 	const activePlistNames = new Set([
 		getServiceLabel(itsonTask),
-		...config.applications.map((application) => getServiceLabel(application)),
+		...config.applications.map((app) => getServiceLabel(app)),
 		...config.tasks.map((task) => getServiceLabel(task)),
 	])
 
 	const guiDomain = getGuiDomain()
 
-	let deleteCount = 0
+	let deletedCount = 0
 	for (const plistPath of plistPaths) {
 		const plistName = path.basename(plistPath, '.plist')
 		if (!activePlistNames.has(plistName)) {
 			await execa('launchctl', ['bootout', `${guiDomain}/${plistName}`], { reject: false })
 			await deleteFileSafe(plistPath)
 			log.debug(`Unloaded orphaned launchd service from ${plistPath}`)
-			deleteCount++
+			deletedCount++
 		}
 	}
 
-	return deleteCount
+	return deletedCount
 }
 
 async function getAllPlistPaths(): Promise<string[]> {
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.itson.*.plist')
-	const plistFiles = glob(plistPath)
 
-	const plistPaths: string[] = []
-	for await (const plistFile of plistFiles) {
-		plistPaths.push(plistFile)
-	}
+	const plistPaths: string[] = await Array.fromAsync(glob(plistPath))
 
 	return plistPaths
 }
@@ -181,7 +177,7 @@ export async function unregisterAll() {
  *
  * @public
  */
-export async function unregisterService(appOrTask: ItsonConfigApplication | ItsonConfigTask) {
+export async function unregisterService(appOrTask: ItsonConfigApp | ItsonConfigTask) {
 	await stopService(appOrTask)
 	const label = getServiceLabel(appOrTask)
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
@@ -191,16 +187,16 @@ export async function unregisterService(appOrTask: ItsonConfigApplication | Itso
 /**
  * Stop an application
  */
-export async function stopService(application: ItsonConfigApplication | ItsonConfigTask) {
-	const label = getServiceLabel(application)
+export async function stopService(app: ItsonConfigApp | ItsonConfigTask) {
+	const label = getServiceLabel(app)
 	const guiDomain = getGuiDomain()
 	await execa('launchctl', ['bootout', `${guiDomain}/${label}`], { reject: false })
 }
 
 const itsonTask: ItsonConfigTask = {
-	arguments: [],
-	command: 'itson',
 	name: 'Itson',
+	command: 'itson',
+	arguments: [],
 	schedule: '@reboot',
 }
 

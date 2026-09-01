@@ -23,9 +23,9 @@ const DEFAULT_IGNORE_PATTERNS = [
 	'**/.env*',
 ]
 
-const TRAILING_SLASH_REGEX = /\/$/
+const TRAILING_SLASH_REGEX = /\/$/v
 
-const APP_LOG_REGEX = /app\.log$/
+const APP_LOG_REGEX = /app\.log$/v
 
 /**
  * Mirrors S3FolderSync.shouldIgnoreFile logic
@@ -49,7 +49,9 @@ function getRemoteKey(localFilePath: string, localPath: string, remotePath?: str
 	const relativePath = relative(localPath, localFilePath)
 	const remoteKey = relativePath.split(sep).join('/')
 
-	return remotePath ? `${remotePath.replace(TRAILING_SLASH_REGEX, '')}/${remoteKey}` : remoteKey
+	return remotePath === undefined || remotePath.length === 0
+		? remoteKey
+		: `${remotePath.replace(TRAILING_SLASH_REGEX, '')}/${remoteKey}`
 }
 
 describe('Ignore Patterns', () => {
@@ -212,12 +214,12 @@ describe('File Discovery', () => {
 	})
 
 	it('should find files in nested directories', async () => {
-		const subDirectory = join(testDirectory, 'sub', 'deep')
-		await mkdir(subDirectory, { recursive: true })
+		const subdirectory = join(testDirectory, 'sub', 'deep')
+		await mkdir(subdirectory, { recursive: true })
 
 		await writeFile(join(testDirectory, 'root.log'), 'root', 'utf8')
 		await writeFile(join(testDirectory, 'sub', 'mid.log'), 'mid', 'utf8')
-		await writeFile(join(subDirectory, 'deep.log'), 'deep', 'utf8')
+		await writeFile(join(subdirectory, 'deep.log'), 'deep', 'utf8')
 
 		// Use readdir recursive to verify structure
 		const files: string[] = []

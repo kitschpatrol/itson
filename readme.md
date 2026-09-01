@@ -8,8 +8,8 @@
 
 <!-- badges -->
 
-[![NPM Package itson](https://img.shields.io/npm/v/itson.svg)](https://npmjs.com/package/itson)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit/)
+[![NPM Package itson](https://img.shields.io/npm/v/itson.svg)](https://www.npmjs.com/package/itson)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit)
 [![CI](https://github.com/kitschpatrol/itson/actions/workflows/ci.yml/badge.svg)](https://github.com/kitschpatrol/itson/actions/workflows/ci.yml)
 
 <!-- /badges -->
@@ -30,7 +30,7 @@ Itson helps you install, update, and run your bespoke privately-distributed appl
 
 Itson does the following each time it runs:
 
-1. **Read** a configuration file and **register** any new configuration settings with the operating system. \
+1. **Read** a configuration file and idempotently **register** any new configuration settings with the operating system. \
    _For now, this amounts to scheduling itson's own launch on future startups and registering any scheduled tasks specified in the configuration._
 
 2. **Check** for available updates to exhibit applications, prompting for credentials if necessary. \
@@ -51,7 +51,7 @@ Itson does the following each time it runs:
 
 Itson is architected with future cross-platform support in mind, but currently only provides implementations for macOS.
 
-Itson requires [Node](https://nodejs.org/) 22.18.0+.
+Itson requires [Node](https://nodejs.org/) 24.16.0+.
 
 Installing Python application packages requires [uv](https://docs.astral.sh/uv/).
 
@@ -166,7 +166,7 @@ itson [command]
 
 #### Updates / deployment
 
-Update functionality can be baked into applications (e.g. [Squirrel](https://github.com/Squirrel), [Sparkle](https://sparkle-project.org/), [Electron autoUpdater](https://www.electronjs.org/docs/latest/api/auto-updater), etc.), but these are geared toward end-user applications and generally display their prompts interactively — unworkable for an "always on" interactive exhibit application.
+Update functionality is often baked into applications (e.g. [Squirrel](https://github.com/Squirrel), [Sparkle](https://sparkle-project.org/), [Electron autoUpdater](https://www.electronjs.org/docs/latest/api/auto-updater), etc.), but these are geared toward end-user applications and generally display their prompts interactively — unworkable for an "always on" interactive exhibit application.
 
 [Homebrew](https://brew.sh) or [Scoop](https://scoop.sh/) implement robust and readily-scriptable package management solutions, but none are (practically) cross-platform. Securing and managing private registries for one-off applications is a bit of a pain.
 

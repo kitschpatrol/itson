@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { getCronStringDescription } from '../src/lib/utilities/cron-to-launchd'
 
-const EVERY_HOUR_REGEX = /every hour/i
-const DAILY_REGEX = /day|midnight|12:00 AM/i
-const EVERY_5_MINUTES_REGEX = /every 5 minutes/i
-const HOURLY_REGEX = /hour/i
-const WEEKLY_REGEX = /week|sunday/i
-const MONTHLY_REGEX = /month|day 1/i
-const YEARLY_REGEX = /year|january/i
+const EVERY_HOUR_REGEX = /every hour/iv
+const DAILY_REGEX = /day|midnight|12:00 AM/iv
+const EVERY_5_MINUTES_REGEX = /every 5 minutes/iv
+const HOURLY_REGEX = /hour/iv
+const WEEKLY_REGEX = /week|sunday/iv
+const MONTHLY_REGEX = /month|day 1/iv
+const YEARLY_REGEX = /year|january/iv
 
 describe('getCronStringDescription', () => {
 	it('should return human-readable description for standard cron expressions', () => {

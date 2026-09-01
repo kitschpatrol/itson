@@ -7,7 +7,7 @@ import { cronToPlistFragment } from './cron-to-launchd'
 /**
  * Create a launchd plist for a long-running application.
  */
-export function createApplicationPlist(options: {
+export function createAppPlist(options: {
 	arguments?: string[]
 	command: string
 	keepAlive: boolean
@@ -28,11 +28,11 @@ export function createApplicationPlist(options: {
 				PATH: options.userPath,
 				NODE_ENV: 'production',
 			},
-			...(options.schedule
-				? {
+			...(options.schedule === undefined || options.schedule.length === 0
+				? { RunAtLoad: false }
+				: {
 						...cronToPlistFragment(options.schedule),
-					}
-				: { RunAtLoad: false }),
+					}),
 			KeepAlive: options.keepAlive
 				? {
 						SuccessfulExit: true,

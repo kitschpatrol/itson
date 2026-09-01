@@ -1,6 +1,6 @@
 import isOnline from 'is-online'
 import { log } from 'lognow'
-import type { ItsonConfig, ItsonConfigApplication, ItsonConfigTask } from '../config'
+import type { ItsonConfig, ItsonConfigApp, ItsonConfigTask } from '../config'
 import { S3FolderSync } from '../log-uploader'
 
 /**
@@ -8,7 +8,7 @@ import { S3FolderSync } from '../log-uploader'
  *
  * @public
  */
-export async function uploadLogs(appOrTask: ItsonConfigApplication | ItsonConfigTask) {
+export async function uploadLogs(appOrTask: ItsonConfigApp | ItsonConfigTask) {
 	if (!appOrTask.logUpload) {
 		log.info(`No log upload strategy found for ${appOrTask.name}, skipping...`)
 		return
@@ -49,7 +49,7 @@ export async function uploadAllLogs(config: ItsonConfig) {
 	const appsAndTasks = [...config.applications, ...config.tasks]
 
 	// Do any apps or tasks have non-undefined log upload strategies?
-	if (!appsAndTasks.some((appOrTask) => appOrTask.logUpload !== undefined)) {
+	if (appsAndTasks.every((appOrTask) => appOrTask.logUpload === undefined)) {
 		log.info('No apps or tasks have defined log upload strategies. Skipping log uploads.')
 		return
 	}

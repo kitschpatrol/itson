@@ -1,32 +1,33 @@
 #!/usr/bin/env node
 
+import { loadConfig } from 'c12'
+import { getJsonFileTransportDestinations, log, setDefaultLogOptions } from 'lognow'
+import os from 'node:os'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { log, setDefaultLogOptions, getJsonFileTransportDestinations } from 'lognow'
-import { version, name } from '../../package.json'
-import { updateAllAppsAndTasks } from '../lib/commands/update'
-import { loadConfig } from 'c12'
-import { ItsonConfig, DEFAULT_ITSON_CONFIG } from '../lib/config'
-import { startAllApplications } from '../lib/commands/start'
-import os from 'os'
-import { stopAllApplications } from '../lib/commands/stop'
+import type { ItsonConfig } from '../lib/config'
+import { name, version } from '../../package.json'
+import { uploadAllLogs } from '../lib/commands/log-upload'
 import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
-import { uploadAllLogs } from '../lib/commands/log-upload'
+import { startAllApps } from '../lib/commands/start'
+import { stopAllApps } from '../lib/commands/stop'
+import { updateAllAppsAndTasks } from '../lib/commands/update'
+import { DEFAULT_ITSON_CONFIG } from '../lib/config'
 
-setDefaultLogOptions({ name, logJsonToFile: true })
+setDefaultLogOptions({ logJsonToFile: true, name })
 
 // Config
 const { config, configFile } = await loadConfig<ItsonConfig>({
-	name: 'itson',
-	cwd: os.homedir(), // rcfile search in home dir doesn't seem to work...
-	globalRc: true,
+	cwd: os.homedir(), // Rcfile search in home dir doesn't seem to work...
 	defaultConfig: DEFAULT_ITSON_CONFIG,
+	globalRc: true,
+	name: 'itson',
 })
 
 const yargsInstance = yargs(hideBin(process.argv))
 
-// yes
+// Yes
 await yargsInstance
 	.scriptName('itson')
 	.usage('$0 [command]', 'Run an itson command.')
@@ -58,7 +59,9 @@ await yargsInstance
 	.command(
 		['$0', 'launch'],
 		'Update, register, and start all managed applications. Applications will auto-restart if they crash.',
-		() => {},
+		() => {
+			/* Empty */
+		},
 		async () => {
 			log.info(`Itson config file found at "${configFile}"`)
 			log.info('Launching itson')
@@ -66,31 +69,37 @@ await yargsInstance
 			await register(config)
 			await updateAllAppsAndTasks(config)
 			await uploadAllLogs(config)
-			await startAllApplications(config)
+			await startAllApps(config)
 		},
 	)
 	.command(
 		'start',
 		'Start all managed applications. Applications will auto-restart if they crash.',
-		() => {},
+		() => {
+			/* Empty */
+		},
 		async () => {
 			await register(config)
-			await startAllApplications(config)
+			await startAllApps(config)
 		},
 	)
 	.command(
 		'stop',
 		'Stop all managed applications.',
-		() => {},
+		() => {
+			/* Empty */
+		},
 		async () => {
 			await register(config)
-			await stopAllApplications(config)
+			await stopAllApps(config)
 		},
 	)
 	.command(
 		'update',
 		'Update all managed applications and tasks to the latest available versions.',
-		() => {},
+		() => {
+			/* Empty */
+		},
 		async () => {
 			await register(config)
 			await updateAllAppsAndTasks(config)
@@ -99,7 +108,9 @@ await yargsInstance
 	.command(
 		'upload-logs',
 		'Upload all application and task logs to the configured S3 bucket.',
-		() => {},
+		() => {
+			/* Empty */
+		},
 		async () => {
 			await register(config)
 			await uploadAllLogs(config)
@@ -108,15 +119,19 @@ await yargsInstance
 	.command(
 		'register',
 		'Register itson with the system according to the config file. Optionally run this after changing state in the config file.',
-		() => {},
+		() => {
+			/* Empty */
+		},
 		async () => {
-			register(config)
+			await register(config)
 		},
 	)
 	.command(
 		'reset',
 		'Clear any credentials stored in the system keychain, and remove any registered services.',
-		() => {},
+		() => {
+			/* Empty */
+		},
 		async () => {
 			await reset()
 		},

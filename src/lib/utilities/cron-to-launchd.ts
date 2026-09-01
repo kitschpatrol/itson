@@ -61,13 +61,13 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 	const { second: secondField, ...serializedFields } = parsedCronExpression.fields.serialize()
 
 	// Check if all non-second fields are wildcards
-	const allOtherFieldsWild = Object.entries(serializedFields).every(([_, value]) => value.wildcard)
+	const allOtherFieldsWild = Object.values(serializedFields).every((value) => value.wildcard)
 
 	// Validate seconds field usage
 	// Seconds are only supported when all other fields are wildcards
 	if (!secondField.wildcard) {
 		// Ensure all values are numbers
-		if (!secondField.values.every((value) => typeof value === 'number')) {
+		if (!secondField.values.every((value): value is number => typeof value === 'number')) {
 			throw new Error('Seconds values must be numbers')
 		}
 
@@ -112,7 +112,7 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 		// Case 3: Single zero value - check if it's a degenerate interval
 		// If allOtherFieldsWild=false, this is likely a 5-field cron (e.g., '5 * * * *') where seconds defaults to 0 - allow it
 		// If allOtherFieldsWild=true, this is a 6-field cron (e.g., '0 * * * * *' or '*/100 * * * * *')
-		if (secondValues.length === 1 && secondValues[0] === 0 && allOtherFieldsWild) {
+		if (allOtherFieldsWild && secondValues.length === 1 && secondValues[0] === 0) {
 			// Check if the raw value indicates it's a degenerate interval like */100
 			// @ts-expect-error - options is protected
 			const { rawValue } = parsedCronExpression.fields.second.options
@@ -125,7 +125,7 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 	}
 
 	// Case 4: Second field is wildcard
-	if (secondField.wildcard && !allOtherFieldsWild) {
+	if (!allOtherFieldsWild && secondField.wildcard) {
 		throw new Error(
 			`Seconds wildcard can only be used when all other fields (minute, hour, day, month, weekday) are wildcards. For sub-minute scheduling, use '* * * * * *' (every second).`,
 		)
@@ -137,7 +137,9 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 			.filter(([_, value]) => !value.wildcard)
 			.map(([field, value]) => {
 				// Ensure all values are numbers
-				if (!value.values.every((value) => typeof value === 'number')) {
+				if (
+					!value.values.every((fieldValue): fieldValue is number => typeof fieldValue === 'number')
+				) {
 					throw new Error(`Field ${field} values must be numbers: ${value.values.join(', ')}`)
 				}
 
@@ -160,7 +162,9 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 		}
 
 		// All numbers
-		if (!serializedFields.minute.values.every((value) => typeof value === 'number')) {
+		if (
+			!serializedFields.minute.values.every((value): value is number => typeof value === 'number')
+		) {
 			throw new Error(`Minute values must be numbers: ${serializedFields.minute.values.join(', ')}`)
 		}
 
@@ -278,18 +282,20 @@ function cronKeyToPlistKey(cronKey: string): string {
  */
 function getConsistentSecondInterval(values: number[]): number | undefined {
 	// Can't be a single value
-	if (values.length < 2) {
+	const [firstValue, secondValue] = values
+	if (firstValue === undefined || secondValue === undefined) {
 		return undefined
 	}
 
-	const interval = values[1] - values[0]
+	const interval = secondValue - firstValue
 
 	if (
+		// Values start at zero
+		firstValue === 0 &&
 		// Interval is consistent
-		values.every((value, index) => value - values[0] === interval * index) &&
+		values.every((value, index) => value - firstValue === interval * index) &&
 		// Values cover the full minute
-		(values.at(-1) ?? 0) + interval >= 60 &&
-		values[0] === 0
+		(values.at(-1) ?? 0) + interval >= 60
 	) {
 		return interval
 	}

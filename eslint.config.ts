@@ -18,6 +18,7 @@ export default eslintConfig(
 		files: ['readme.md/*.js'],
 		rules: {
 			'perfectionist/sort-objects': 'off',
+			'require-unicode-regexp': 'off',
 		},
 	},
 )

@@ -1,18 +1,18 @@
-/* eslint-disable ts/naming-convention, ts/no-unsafe-type-assertion */
+/* eslint-disable ts/naming-convention */
 
 import { build, parse } from 'plist'
 import { describe, expect, it } from 'vitest'
-import { createApplicationPlist } from '../src/lib/utilities/plist-builder'
+import { createAppPlist } from '../src/lib/utilities/plist-builder'
 
-const OUT_LOG_REGEX = /com\.itson\.app\.LogTest\.out\.log$/
-const ERR_LOG_REGEX = /com\.itson\.app\.LogTest\.err\.log$/
+const OUT_LOG_REGEX = /com\.itson\.app\.LogTest\.out\.log$/v
+const ERR_LOG_REGEX = /com\.itson\.app\.LogTest\.err\.log$/v
 
 type PlistRecord = Record<string, unknown>
 type PlistEnv = Record<string, string>
 
-describe('createApplicationPlist', () => {
+describe('createAppPlist', () => {
 	it('should generate a valid plist for a keep-alive application', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			command: '/usr/local/bin/my-app',
 			keepAlive: true,
 			label: 'com.itson.app.TestApp',
@@ -37,7 +37,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should generate a valid plist for a non-keep-alive task', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			command: '/usr/local/bin/my-task',
 			keepAlive: false,
 			label: 'com.itson.task.Cleanup',
@@ -53,7 +53,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should include schedule from cron expression', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			command: '/usr/local/bin/my-task',
 			keepAlive: false,
 			label: 'com.itson.task.Scheduled',
@@ -69,7 +69,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should include @reboot schedule as RunAtLoad', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			command: 'itson',
 			keepAlive: false,
 			label: 'com.itson.task.Itson',
@@ -82,7 +82,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should include additional arguments', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			arguments: ['--verbose', '--config', '/etc/myapp.conf'],
 			command: '/usr/local/bin/my-app',
 			keepAlive: true,
@@ -101,7 +101,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should set correct log paths', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			command: 'my-app',
 			keepAlive: true,
 			label: 'com.itson.app.LogTest',
@@ -114,7 +114,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should use custom log directory path', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			command: 'my-app',
 			keepAlive: true,
 			label: 'com.itson.app.CustomLog',
@@ -128,7 +128,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should produce valid XML that can be round-tripped', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			arguments: ['--port', '8080'],
 			command: 'node',
 			keepAlive: true,
@@ -146,7 +146,7 @@ describe('createApplicationPlist', () => {
 	})
 
 	it('should handle empty arguments array', () => {
-		const result = createApplicationPlist({
+		const result = createAppPlist({
 			arguments: [],
 			command: 'my-app',
 			keepAlive: false,
