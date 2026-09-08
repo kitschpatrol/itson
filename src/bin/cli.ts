@@ -19,12 +19,20 @@ import { DEFAULT_ITSON_CONFIG, itsonConfigSchema } from '../lib/config'
 setDefaultLogOptions({ logJsonToFile: true, name })
 
 // Config
-const { config: rawConfig, configFile } = await loadConfig<ItsonConfigInput>({
+// `_configFile` is the path c12 actually loaded, `configFile` is just the
+// name it searched for and is set even when nothing was found
+const { _configFile: configFile, config: rawConfig } = await loadConfig<ItsonConfigInput>({
 	cwd: os.homedir(), // Rcfile search in home dir doesn't seem to work...
 	defaultConfig: DEFAULT_ITSON_CONFIG,
 	globalRc: true,
 	name: 'itson',
 })
+
+if (configFile === undefined) {
+	log.warn(
+		`No itson config file found. Create ${os.homedir()}/itson.config.js (or .ts, or .json) to manage applications and tasks.`,
+	)
+}
 
 const parsedConfig = itsonConfigSchema.safeParse(rawConfig)
 if (!parsedConfig.success) {
@@ -86,7 +94,10 @@ await yargsInstance
 			/* Empty */
 		},
 		async () => {
-			log.info(`Itson config file found at "${configFile}"`)
+			if (configFile !== undefined) {
+				log.info(`Using itson config file at "${configFile}"`)
+			}
+
 			log.info('Launching itson')
 
 			await runPhase('Registration', async () => register(config))
