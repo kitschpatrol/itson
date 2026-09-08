@@ -11,7 +11,9 @@
 				"type": "object",
 				"properties": {
 					"name": {
-						"type": "string"
+						"type": "string",
+						"minLength": 1,
+						"description": "Unique name for the application or task, used to label its launchd service."
 					},
 					"command": {
 						"description": "Executable to run, either a name on the PATH or a path. A leading `~` is expanded to the home directory.",
@@ -171,7 +173,9 @@
 				"type": "object",
 				"properties": {
 					"name": {
-						"type": "string"
+						"type": "string",
+						"minLength": 1,
+						"description": "Unique name for the application or task, used to label its launchd service."
 					},
 					"command": {
 						"description": "Executable to run, either a name on the PATH or a path. A leading `~` is expanded to the home directory.",

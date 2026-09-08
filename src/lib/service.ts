@@ -5,6 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import type { ItsonConfig, ItsonConfigApp, ItsonConfigTask } from './config'
 import { isApp, isTask } from './config'
+import { ITSON_TASK_NAME } from './constants'
 import { deleteFileSafe, readFileSafe } from './utilities'
 import { createAppPlist } from './utilities/plist-builder'
 
@@ -194,7 +195,7 @@ export async function stopService(app: ItsonConfigApp | ItsonConfigTask) {
 }
 
 const itsonTask: ItsonConfigTask = {
-	name: 'Itson',
+	name: ITSON_TASK_NAME,
 	command: 'itson',
 	arguments: [],
 	schedule: '@reboot',

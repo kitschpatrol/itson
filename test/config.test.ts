@@ -192,6 +192,51 @@ describe('schedule validation', () => {
 	})
 })
 
+describe('name validation', () => {
+	it('should reject blank names and names containing a path separator', () => {
+		const blank = itsonConfigSchema.safeParse({ applications: [{ name: '  ', command: 'app' }] })
+		expect(blank.success).toBe(false)
+
+		const slash = itsonConfigSchema.safeParse({
+			applications: [{ name: 'Ten/Kings', command: 'app' }],
+		})
+		expect(slash.success).toBe(false)
+		expect(z.prettifyError(slash.error!)).toContain('applications[0].name')
+	})
+
+	it('should reject duplicate names within applications or within tasks', () => {
+		const result = itsonConfigSchema.safeParse({
+			applications: [
+				{ name: 'Ten Kings', command: 'a' },
+				{ name: 'Ten Kings', command: 'b' },
+			],
+		})
+
+		expect(result.success).toBe(false)
+		expect(z.prettifyError(result.error!)).toContain('applications[1].name')
+		expect(z.prettifyError(result.error!)).toContain('Duplicate application name "Ten Kings"')
+	})
+
+	it('should allow an application and a task to share a name', () => {
+		// They get different launchd label prefixes, so they never collide
+		const result = itsonConfigSchema.safeParse({
+			applications: [{ name: 'Sync', command: 'a' }],
+			tasks: [{ name: 'Sync', command: 'b', schedule: '0 * * * *' }],
+		})
+
+		expect(result.success).toBe(true)
+	})
+
+	it('should reserve the itson task name', () => {
+		const result = itsonConfigSchema.safeParse({
+			tasks: [{ name: 'Itson', command: 'b', schedule: '0 * * * *' }],
+		})
+
+		expect(result.success).toBe(false)
+		expect(z.prettifyError(result.error!)).toContain('reserved')
+	})
+})
+
 describe('DEFAULT_ITSON_CONFIG', () => {
 	it('should have expected default values', () => {
 		expect(DEFAULT_ITSON_CONFIG).toEqual({

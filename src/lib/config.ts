@@ -4,6 +4,7 @@
 
 import os from 'node:os'
 import { z } from 'zod'
+import { ITSON_TASK_NAME } from './constants.ts'
 import { cronToPlistFragment } from './utilities/cron-to-launchd.ts'
 
 /**
@@ -105,8 +106,41 @@ const itsonLogUploadStrategyS3Schema = z.object({
 	type: z.literal('s3'),
 })
 
+/**
+ * The name doubles as the launchd label suffix and the plist file name, so it
+ * can't be blank or contain a path separator.
+ */
+const nameSchema = z
+	.string()
+	.trim()
+	.min(1, 'A name is required.')
+	.refine((value) => !value.includes('/'), 'Names must not contain "/".')
+	.describe('Unique name for the application or task, used to label its launchd service.')
+
+/**
+ * Report duplicate names within a list of applications or tasks.
+ */
+function addDuplicateNameIssues(
+	items: Array<{ name: string }>,
+	path: 'applications' | 'tasks',
+	context: z.RefinementCtx,
+) {
+	const seen = new Set<string>()
+	for (const [index, item] of items.entries()) {
+		if (seen.has(item.name)) {
+			context.addIssue({
+				code: 'custom',
+				message: `Duplicate ${path === 'tasks' ? 'task' : 'application'} name "${item.name}". Names must be unique.`,
+				path: [path, index, 'name'],
+			})
+		}
+
+		seen.add(item.name)
+	}
+}
+
 const itsonConfigBaseSchema = z.object({
-	name: z.string(),
+	name: nameSchema,
 	command: localPathSchema.describe(
 		'Executable to run, either a name on the PATH or a path. A leading `~` is expanded to the home directory.',
 	),
@@ -158,22 +192,38 @@ const itsonConfigAppSchema = itsonConfigBaseSchema.extend({
  *
  * @public
  */
-export const itsonConfigSchema = z.object({
-	applications: z
-		.array(itsonConfigAppSchema)
-		.default([])
-		.describe('Applications to manage and keep running persistently.'),
-	offline: z
-		.boolean()
-		.default(false)
-		.describe("Don't wait around for internet access, skip operations that require it."),
-	runOnStartup: z.boolean().default(false).describe('Register itson to run on startup.'),
-	tasks: z
-		.array(itsonConfigTaskSchema)
-		.default([])
-		.describe('One-off tasks to run at specified times.'),
-	verbose: z.boolean().default(false).describe('Run with verbose logging.'),
-})
+export const itsonConfigSchema = z
+	.object({
+		applications: z
+			.array(itsonConfigAppSchema)
+			.default([])
+			.describe('Applications to manage and keep running persistently.'),
+		offline: z
+			.boolean()
+			.default(false)
+			.describe("Don't wait around for internet access, skip operations that require it."),
+		runOnStartup: z.boolean().default(false).describe('Register itson to run on startup.'),
+		tasks: z
+			.array(itsonConfigTaskSchema)
+			.default([])
+			.describe('One-off tasks to run at specified times.'),
+		verbose: z.boolean().default(false).describe('Run with verbose logging.'),
+	})
+	.superRefine((config, context) => {
+		// Applications and tasks get distinct launchd label prefixes, so a name
+		// only has to be unique within its own list
+		addDuplicateNameIssues(config.applications, 'applications', context)
+		addDuplicateNameIssues(config.tasks, 'tasks', context)
+
+		const reservedIndex = config.tasks.findIndex((task) => task.name === ITSON_TASK_NAME)
+		if (reservedIndex !== -1) {
+			context.addIssue({
+				code: 'custom',
+				message: `The task name "${ITSON_TASK_NAME}" is reserved for itson's own startup task.`,
+				path: ['tasks', reservedIndex, 'name'],
+			})
+		}
+	})
 
 /**
  * The validated and normalized itson configuration, as used internally.

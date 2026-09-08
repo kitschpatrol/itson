@@ -79,6 +79,9 @@ export type ItsonLogUploadStrategyS3 = {
  * An application to manage and keep running persistently.
  */
 export type ItsonConfigApp = {
+	/**
+	 * Unique name for the application or task, used to label its launchd service.
+	 */
 	name: string
 	/**
 	 * Executable to run, either a name on the PATH or a path. A leading `~` is
@@ -100,6 +103,9 @@ export type ItsonConfigApp = {
  * A one-off task to run at specified times.
  */
 export type ItsonConfigTask = {
+	/**
+	 * Unique name for the application or task, used to label its launchd service.
+	 */
 	name: string
 	/**
 	 * Executable to run, either a name on the PATH or a path. A leading `~` is
