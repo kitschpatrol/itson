@@ -1,12 +1,10 @@
-// TODO revisit client-s3 version
-// Currently pinned to 3.893.0 because of issues in another project, which might not apply here
 import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import keytar from 'keytar-forked'
 import { log } from 'lognow'
 import { minimatch } from 'minimatch'
 import { createHash } from 'node:crypto'
-import { createReadStream, statSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
+import { readdir, stat } from 'node:fs/promises'
 import { basename, join, relative, sep } from 'node:path'
 import plur from 'plur'
 import type { ItsonLogUploadStrategyS3 } from './config'
@@ -283,6 +281,11 @@ export class S3FolderSync {
 			},
 			endpoint: this.config.endpoint,
 			region: 'auto',
+			// Newer SDKs default to sending CRC checksums as trailing headers,
+			// which S3-compatible stores like Cloudflare R2 reject. Only send
+			// checksums where the operation requires them.
+			requestChecksumCalculation: 'WHEN_REQUIRED',
+			responseChecksumValidation: 'WHEN_REQUIRED',
 		})
 
 		return true
@@ -314,7 +317,7 @@ export class S3FolderSync {
 			return true // File doesn't exist remotely, upload it
 		}
 
-		const localStats = statSync(localFilePath)
+		const localStats = await stat(localFilePath)
 		const localModifiedTime = localStats.mtime
 
 		// If local file is newer, upload it
@@ -345,11 +348,18 @@ export class S3FolderSync {
 
 		log.debug(`Uploading: ${localFilePath} -> ${remoteKey}`)
 
+		// Declare the length up front so the SDK doesn't fall back to chunked
+		// transfer encoding for the stream, which not every S3-compatible
+		// endpoint accepts
+		const { size } = await stat(localFilePath)
+
 		const command = new PutObjectCommand({
 			// eslint-disable-next-line ts/naming-convention
 			Body: createReadStream(localFilePath),
 			// eslint-disable-next-line ts/naming-convention
 			Bucket: this.config.bucketName,
+			// eslint-disable-next-line ts/naming-convention
+			ContentLength: size,
 			// eslint-disable-next-line ts/naming-convention
 			Key: remoteKey,
 		})
