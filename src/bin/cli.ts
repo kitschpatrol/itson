@@ -35,6 +35,19 @@ if (!parsedConfig.success) {
 
 const config = parsedConfig.data
 
+/**
+ * Run one phase of a multi-step command, logging failures instead of letting
+ * them abort the remaining phases. Getting the applications running matters
+ * more than any single update or upload succeeding.
+ */
+async function runPhase(description: string, phase: () => Promise<void>): Promise<void> {
+	try {
+		await phase()
+	} catch (error) {
+		log.withError(error).error(`${description} failed, continuing:`)
+	}
+}
+
 const yargsInstance = yargs(hideBin(process.argv))
 
 // Yes
@@ -76,9 +89,9 @@ await yargsInstance
 			log.info(`Itson config file found at "${configFile}"`)
 			log.info('Launching itson')
 
-			await register(config)
-			await updateAllAppsAndTasks(config)
-			await uploadAllLogs(config)
+			await runPhase('Registration', async () => register(config))
+			await runPhase('Update', async () => updateAllAppsAndTasks(config))
+			await runPhase('Log upload', async () => uploadAllLogs(config))
 			await startAllApps(config)
 		},
 	)
@@ -89,7 +102,7 @@ await yargsInstance
 			/* Empty */
 		},
 		async () => {
-			await register(config)
+			await runPhase('Registration', async () => register(config))
 			await startAllApps(config)
 		},
 	)
