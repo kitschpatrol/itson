@@ -163,6 +163,35 @@ describe('tilde expansion', () => {
 	})
 })
 
+describe('schedule validation', () => {
+	function parseTask(schedule: string) {
+		return itsonConfigSchema.safeParse({
+			tasks: [{ name: 'Task', command: 'true', schedule }],
+		})
+	}
+
+	it('should accept cron strings launchd can represent', () => {
+		expect(parseTask('50 1 * * *').success).toBe(true)
+		expect(parseTask('*/15 8-10 * * 1-5').success).toBe(true)
+		expect(parseTask('@reboot').success).toBe(true)
+	})
+
+	it('should reject malformed cron strings at load time', () => {
+		const result = parseTask('not a cron string')
+
+		expect(result.success).toBe(false)
+		expect(z.prettifyError(result.error!)).toContain('Unsupported schedule "not a cron string"')
+	})
+
+	it('should reject cron strings launchd cannot represent', () => {
+		// Seconds combined with other fields have no launchd equivalent
+		const result = parseTask('30 5 * * * *')
+
+		expect(result.success).toBe(false)
+		expect(z.prettifyError(result.error!)).toContain('tasks[0].schedule')
+	})
+})
+
 describe('DEFAULT_ITSON_CONFIG', () => {
 	it('should have expected default values', () => {
 		expect(DEFAULT_ITSON_CONFIG).toEqual({

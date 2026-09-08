@@ -4,6 +4,7 @@
 
 import os from 'node:os'
 import { z } from 'zod'
+import { cronToPlistFragment } from './utilities/cron-to-launchd.ts'
 
 /**
  * Expand a leading `~` to the current user's home directory, the way a shell
@@ -127,6 +128,18 @@ const itsonConfigBaseSchema = z.object({
 const itsonConfigTaskSchema = itsonConfigBaseSchema.extend({
 	schedule: z
 		.string()
+		.superRefine((value, context) => {
+			// Fail at config load with the same clear error as any other config
+			// mistake, rather than when the task is registered with launchd
+			try {
+				cronToPlistFragment(value)
+			} catch (error) {
+				context.addIssue({
+					code: 'custom',
+					message: `Unsupported schedule "${value}": ${error instanceof Error ? error.message : String(error)}`,
+				})
+			}
+		})
 		.describe(
 			'Schedule to run the task at specified times or at `@reboot` (system startup). Uses cron syntax (with some edge-case limitations). Uses local time, not UTC.',
 		),
