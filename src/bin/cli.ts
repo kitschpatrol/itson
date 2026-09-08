@@ -59,8 +59,8 @@ await yargsInstance
 			config.verbose = argv.verbose
 		}
 
-		// Set console level globally based on verbose flag
-		setDefaultLogOptions({ verbose: argv.verbose })
+		// Set console level globally based on the resolved verbose setting
+		setDefaultLogOptions({ verbose: config.verbose })
 
 		log.debug('Verbose logging enabled')
 		log.debug(`Logging to file: "${getJsonFileTransportDestinations().at(0)}"`)
