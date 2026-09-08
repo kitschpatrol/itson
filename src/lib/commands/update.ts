@@ -14,7 +14,7 @@ import { pipeline } from 'node:stream/promises'
 import semver from 'semver'
 import type { ItsonConfig } from '../../lib/config.js'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
-import { getVersion, promptForSecret, unzip } from '../../lib/utilities.js'
+import { getVersion, promptForSecret, redactSecret, unzip } from '../../lib/utilities.js'
 
 const GITHUB_PAT_ACCOUNT = 'github-pat'
 const V_PREFIX_REGEX = /^v/v
@@ -256,16 +256,18 @@ async function updateFromGitHubPythonRelease(
 		return
 	}
 
+	// The PAT is embedded in the install URL, and execa echoes the full command
+	// in its error messages, so redact it before anything reaches the logs
 	try {
 		const { stdout } = await execa('uv', [
 			'tool',
 			'install',
 			`git+https://${pat}@github.com/${owner}/${repo}@v${release.version}`,
 		])
-		log.info(stdout)
+		log.info(redactSecret(stdout, pat))
 	} catch (error) {
 		log.error(
-			`Error installing ${owner}/${repo}@v${release.version}: ${error instanceof Error ? error.message : String(error)}`,
+			`Error installing ${owner}/${repo}@v${release.version}: ${redactSecret(error instanceof Error ? error.message : String(error), pat)}`,
 		)
 	}
 }

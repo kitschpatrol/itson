@@ -2,7 +2,28 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { deleteFileSafe, promptForSecret, readFileSafe } from '../src/lib/utilities'
+import { deleteFileSafe, promptForSecret, readFileSafe, redactSecret } from '../src/lib/utilities'
+
+describe('redactSecret', () => {
+	it('should replace every occurrence of the secret', () => {
+		const message =
+			'Command failed: uv tool install git+https://github_pat_abc@github.com/o/r (git+https://github_pat_abc@github.com/o/r)'
+		const redacted = redactSecret(message, 'github_pat_abc')
+
+		expect(redacted).not.toContain('github_pat_abc')
+		expect(redacted).toBe(
+			'Command failed: uv tool install git+https://***@github.com/o/r (git+https://***@github.com/o/r)',
+		)
+	})
+
+	it('should leave text without the secret unchanged', () => {
+		expect(redactSecret('nothing to see', 'github_pat_abc')).toBe('nothing to see')
+	})
+
+	it('should not blank out everything for an empty secret', () => {
+		expect(redactSecret('keep me', '')).toBe('keep me')
+	})
+})
 
 describe('promptForSecret', () => {
 	it('should return undefined instead of prompting when stdin is not a TTY', async () => {

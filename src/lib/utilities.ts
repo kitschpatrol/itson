@@ -47,6 +47,19 @@ export async function promptForSecret(
 }
 
 /**
+ * Replace every occurrence of a secret in a string, so command output and error
+ * messages that echo a URL or argument containing it can be logged safely.
+ *
+ * @param value The text to redact.
+ * @param secret The secret to remove.
+ *
+ * @returns The text with the secret replaced by `***`.
+ */
+export function redactSecret(value: string, secret: string): string {
+	return secret.length === 0 ? value : value.replaceAll(secret, '***')
+}
+
+/**
  * Unzip a file on macOS.
  *
  * @param filePath The path to the file to unzip.
