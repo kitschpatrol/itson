@@ -25,6 +25,25 @@ import {
 const GITHUB_PAT_ACCOUNT = 'github-pat'
 const V_PREFIX_REGEX = /^v/v
 
+/** Per-request limit for GitHub API calls. */
+const API_TIMEOUT_MS = 30_000
+
+/** Overall limit for downloading a single release asset. */
+const DOWNLOAD_TIMEOUT_MS = 10 * 60 * 1000
+
+/**
+ * Octokit doesn't ship the retry plugin and no longer honors `request.timeout`,
+ * so each call gets an abort signal instead.
+ */
+function createOctokit(pat: string): Octokit {
+	return new Octokit({
+		auth: pat,
+		request: {
+			signal: AbortSignal.timeout(API_TIMEOUT_MS),
+		},
+	})
+}
+
 async function getGitHubPat(): Promise<string | undefined> {
 	let pat = (await keytar.getPassword(KEYCHAIN_SERVICE, GITHUB_PAT_ACCOUNT)) ?? undefined
 
@@ -74,16 +93,7 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 		return []
 	}
 
-	const octokit = new Octokit({
-		auth: pat,
-		request: {
-			timeout: 5000,
-		},
-		retry: {
-			doNotRetry: [429],
-			retries: 5,
-		},
-	})
+	const octokit = createOctokit(pat)
 
 	try {
 		const releases = await octokit.paginate(octokit.repos.listReleases, {
@@ -91,6 +101,8 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 			// eslint-disable-next-line ts/naming-convention
 			per_page: 100,
 			repo,
+			// Pagination can span many requests, so the limit applies per page
+			request: { signal: AbortSignal.timeout(API_TIMEOUT_MS) },
 		})
 
 		return releases.map((release) => ({
@@ -118,16 +130,7 @@ async function getLatestRelease(owner: string, repo: string): Promise<GitHubRele
 		return
 	}
 
-	const octokit = new Octokit({
-		auth: pat,
-		request: {
-			timeout: 5000,
-		},
-		retry: {
-			doNotRetry: [429],
-			retries: 5,
-		},
-	})
+	const octokit = createOctokit(pat)
 
 	try {
 		const { data: latestRelease } = await octokit.repos.getLatestRelease({
@@ -291,6 +294,7 @@ async function downloadReleaseAsset(
 				Authorization: `Bearer ${pat}`,
 				'X-GitHub-Api-Version': '2022-11-28',
 			},
+			signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
 		})
 
 		if (!response.ok || !response.body) {
