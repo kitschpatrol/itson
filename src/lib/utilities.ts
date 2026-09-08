@@ -1,5 +1,6 @@
 import { text } from '@clack/prompts'
 import { execa } from 'execa'
+import isOnline from 'is-online'
 import { log } from 'lognow'
 import { readFile, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -183,22 +184,15 @@ export async function deleteFileSafe(path: string): Promise<boolean> {
 }
 
 /**
- * Check if the internet is reachable and DNS is working. Currently using
- * is-online instead of this function.
+ * Check whether the internet is reachable. The result is memoized for the
+ * lifetime of the process, so multiple phases of a single run share one check
+ * and an offline machine only waits out the timeout once.
  *
  * @returns True if the internet is reachable, false otherwise.
- * @public
  */
-export async function checkInternetConnectivity() {
-	const { stderr, stdout } = await execa('ping', ['-c', '1', 'google.com'])
-	if (stdout.includes('1 packets received')) {
-		return true
-	}
-
-	log.error(
-		'No internet connectivity detected. Please check your network connection and try again.',
-	)
-	log.error(stdout)
-	log.error(stderr)
-	return false
+export async function checkOnline(): Promise<boolean> {
+	onlineCheck ??= isOnline({ timeout: 60_000 })
+	return onlineCheck
 }
+
+let onlineCheck: Promise<boolean> | undefined

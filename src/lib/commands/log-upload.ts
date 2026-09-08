@@ -1,7 +1,7 @@
-import isOnline from 'is-online'
 import { log } from 'lognow'
 import type { ItsonConfig, ItsonConfigApp, ItsonConfigTask } from '../config'
 import { S3FolderSync } from '../log-uploader'
+import { checkOnline } from '../utilities'
 
 /**
  * Upload the logs for a single application
@@ -54,7 +54,7 @@ export async function uploadAllLogs(config: ItsonConfig) {
 		return
 	}
 
-	if (!(await isOnline({ timeout: 60_000 }))) {
+	if (!(await checkOnline())) {
 		log.error('No internet access detected. Skipping log uploads.')
 		return
 	}

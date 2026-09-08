@@ -2,7 +2,6 @@
 import { Octokit } from '@octokit/rest'
 import { execa } from 'execa'
 import findVersions from 'find-versions'
-import isOnline from 'is-online'
 import keytar from 'keytar-forked'
 import { log } from 'lognow'
 import { createWriteStream } from 'node:fs'
@@ -14,7 +13,13 @@ import { pipeline } from 'node:stream/promises'
 import semver from 'semver'
 import type { ItsonConfig } from '../../lib/config.js'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
-import { getVersion, promptForSecret, redactSecret, unzip } from '../../lib/utilities.js'
+import {
+	checkOnline,
+	getVersion,
+	promptForSecret,
+	redactSecret,
+	unzip,
+} from '../../lib/utilities.js'
 
 const GITHUB_PAT_ACCOUNT = 'github-pat'
 const V_PREFIX_REGEX = /^v/v
@@ -431,7 +436,7 @@ export async function updateAllAppsAndTasks(config: ItsonConfig) {
 		return
 	}
 
-	if (!(await isOnline({ timeout: 60_000 }))) {
+	if (!(await checkOnline())) {
 		log.error('No internet access detected. Skipping app and task updates.')
 		return
 	}

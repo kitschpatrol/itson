@@ -91,6 +91,8 @@ await yargsInstance
 
 			await runPhase('Registration', async () => register(config))
 			await runPhase('Update', async () => updateAllAppsAndTasks(config))
+			// Upload before starting, so logs from the previous session are
+			// captured before an app has a chance to rotate or truncate them
 			await runPhase('Log upload', async () => uploadAllLogs(config))
 			await startAllApps(config)
 		},
