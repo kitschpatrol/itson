@@ -188,14 +188,17 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 		throw new Error(`Too many permutations: ${permutations}`)
 	}
 
-	// Build the permutations
+	// Build the Cartesian product of all field values. Each field acts as one
+	// digit of a mixed-radix number, so every combination appears exactly once.
 	const startCalendarIntervalArray: LaunchdPlistFragment['StartCalendarInterval'] = []
 
 	for (let i = 0; i < permutations; i++) {
 		const startCalendarIntervalItem: Record<string, number> = {}
+		let remainder = i
 
 		for (const [field, values] of Object.entries(fieldsToCreate)) {
-			const value = values[i % values.length]
+			const value = values[remainder % values.length]
+			remainder = Math.floor(remainder / values.length)
 			if (typeof value !== 'number') {
 				throw new TypeError(`Field ${field} is not a number`)
 			}

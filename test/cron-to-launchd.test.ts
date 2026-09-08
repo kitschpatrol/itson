@@ -19,6 +19,15 @@ const PLIST_START_CALENDAR_INTERVAL_REGEX = /<key>StartCalendarInterval<\/key>\s
 const PLIST_ARRAY_REGEX = /<array>([\s\S]*?)<\/array>/v
 
 /**
+ * Count the distinct StartCalendarInterval entries, so duplicated combinations
+ * can't masquerade as coverage
+ */
+function countUniqueIntervals(entry: LaunchdPlistFragment): number {
+	const intervals = entry.StartCalendarInterval ?? []
+	return new Set(intervals.map((interval) => JSON.stringify(interval))).size
+}
+
+/**
  * Count the number of scheduling intervals (Calendar or Start)
  */
 function countIntervals(xmlOutput: string): number {
@@ -393,10 +402,39 @@ describe('ComprehensivePatterns', () => {
 			]
 
 			for (const [cronExpression, expectedIntervals] of testCases) {
-				const [_, xml] = parseAndGenerate(cronExpression)
+				const [entry, xml] = parseAndGenerate(cronExpression)
 				const intervals = countIntervals(xml)
 				expect(intervals).toBe(expectedIntervals)
+				expect(countUniqueIntervals(entry)).toBe(expectedIntervals)
 			}
+		})
+
+		it('should generate every combination when field lengths share a factor', () => {
+			/* eslint-disable ts/naming-convention */
+			// Same-length fields previously collapsed into duplicates, missing
+			// 9:30 and 17:00 here
+			const [entry] = parseAndGenerate('0,30 9,17 * * *')
+			expect(entry.StartCalendarInterval).toEqual(
+				expect.arrayContaining([
+					{ Hour: 9, Minute: 0 },
+					{ Hour: 9, Minute: 30 },
+					{ Hour: 17, Minute: 0 },
+					{ Hour: 17, Minute: 30 },
+				]),
+			)
+			expect(entry.StartCalendarInterval).toHaveLength(4)
+
+			const [weekdayEntry] = parseAndGenerate('0 9,17 * * 1,5')
+			expect(weekdayEntry.StartCalendarInterval).toEqual(
+				expect.arrayContaining([
+					{ Hour: 9, Minute: 0, Weekday: 1 },
+					{ Hour: 17, Minute: 0, Weekday: 1 },
+					{ Hour: 9, Minute: 0, Weekday: 5 },
+					{ Hour: 17, Minute: 0, Weekday: 5 },
+				]),
+			)
+			expect(weekdayEntry.StartCalendarInterval).toHaveLength(4)
+			/* eslint-enable ts/naming-convention */
 		})
 	})
 
