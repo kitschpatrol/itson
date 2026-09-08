@@ -1,7 +1,50 @@
+import { text } from '@clack/prompts'
 import { execa } from 'execa'
 import { log } from 'lognow'
 import { readFile, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+
+/**
+ * Prompt the user for a secret in the terminal.
+ *
+ * Refuses to prompt when stdin is not a TTY (e.g. when itson is launched by
+ * launchd at startup), since the prompt would otherwise block forever.
+ *
+ * @param message The prompt shown to the user.
+ * @param validate Returns an error message for invalid input, or undefined.
+ *
+ * @returns The entered value, or undefined if the prompt was cancelled or can't
+ *   be shown.
+ */
+export async function promptForSecret(
+	message: string,
+	validate: (value: string) => string | undefined,
+): Promise<string | undefined> {
+	if (!process.stdin.isTTY) {
+		log.error(
+			`Can't prompt for input without a terminal: ${message} Run itson interactively once to store it in the keychain.`,
+		)
+		return undefined
+	}
+
+	const value = await text({
+		message,
+		validate(value: string | undefined) {
+			if (value === undefined || value.length === 0) {
+				return 'A value is required.'
+			}
+
+			return validate(value)
+		},
+	})
+
+	if (typeof value !== 'string' || value.length === 0) {
+		log.info('Operation cancelled.')
+		return undefined
+	}
+
+	return value
+}
 
 /**
  * Unzip a file on macOS.

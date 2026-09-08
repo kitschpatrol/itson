@@ -2,7 +2,25 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { deleteFileSafe, readFileSafe } from '../src/lib/utilities'
+import { deleteFileSafe, promptForSecret, readFileSafe } from '../src/lib/utilities'
+
+describe('promptForSecret', () => {
+	it('should return undefined instead of prompting when stdin is not a TTY', async () => {
+		const originalDescriptor = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
+		Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: false })
+
+		try {
+			const result = await promptForSecret('Enter a secret:', () => 'invalid')
+			expect(result).toBeUndefined()
+		} finally {
+			if (originalDescriptor === undefined) {
+				delete (process.stdin as { isTTY?: boolean }).isTTY
+			} else {
+				Object.defineProperty(process.stdin, 'isTTY', originalDescriptor)
+			}
+		}
+	})
+})
 
 describe('readFileSafe', () => {
 	let testDirectory: string

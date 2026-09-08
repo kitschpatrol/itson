@@ -1,5 +1,4 @@
 // @case-police-ignore Api
-import { text } from '@clack/prompts'
 import { Octokit } from '@octokit/rest'
 import { execa } from 'execa'
 import findVersions from 'find-versions'
@@ -15,7 +14,7 @@ import { pipeline } from 'node:stream/promises'
 import semver from 'semver'
 import type { ItsonConfig } from '../../lib/config.js'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'
-import { getVersion, unzip } from '../../lib/utilities.js'
+import { getVersion, promptForSecret, unzip } from '../../lib/utilities.js'
 
 const GITHUB_PAT_ACCOUNT = 'github-pat'
 const V_PREFIX_REGEX = /^v/v
@@ -26,21 +25,15 @@ async function getGitHubPat(): Promise<string | undefined> {
 	if (pat === undefined || pat.length === 0) {
 		log.warn('GitHub Personal Access Token not found')
 
-		const newPat = await text({
-			message: 'Please enter your GitHub Personal Access Token (PAT) with `repo` scope:',
-			validate(value: string | undefined) {
-				if (value === undefined || value.length === 0) {
-					return 'A token is required.'
-				}
-
-				return value.startsWith('github_pat_')
+		const newPat = await promptForSecret(
+			'Please enter your GitHub Personal Access Token (PAT) with `repo` scope:',
+			(value) =>
+				value.startsWith('github_pat_')
 					? undefined
-					: 'Please enter a valid GitHub Personal Access Token.'
-			},
-		})
+					: 'Please enter a valid GitHub Personal Access Token.',
+		)
 
-		if (typeof newPat !== 'string' || newPat.length === 0) {
-			log.info('Operation cancelled.')
+		if (newPat === undefined) {
 			return
 		}
 

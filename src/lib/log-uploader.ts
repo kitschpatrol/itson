@@ -1,7 +1,6 @@
 // TODO revisit client-s3 version
 // Currently pinned to 3.893.0 because of issues in another project, which might not apply here
 import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { text } from '@clack/prompts'
 import keytar from 'keytar-forked'
 import { log } from 'lognow'
 import { minimatch } from 'minimatch'
@@ -11,7 +10,8 @@ import { readdir } from 'node:fs/promises'
 import { basename, join, relative, sep } from 'node:path'
 import plur from 'plur'
 import type { ItsonLogUploadStrategyS3 } from './config'
-import { KEYCHAIN_SERVICE } from '../lib/constants.js' // Adjust path as needed
+import { KEYCHAIN_SERVICE } from './constants'
+import { promptForSecret } from './utilities'
 
 /**
  * Glob patterns for files to ignore during log upload
@@ -68,19 +68,12 @@ export class S3FolderSync {
 		if (accessKeyId === undefined || accessKeyId.length === 0) {
 			log.warn('S3 Access Key ID not found')
 
-			const newAccessKeyId = await text({
-				message: 'Please enter your S3 Access Key ID:',
-				validate(value: string | undefined) {
-					if (value === undefined || value.length === 0) {
-						return 'An access key ID is required.'
-					}
+			const newAccessKeyId = await promptForSecret(
+				'Please enter your S3 Access Key ID:',
+				(value) => (value.length < 10 ? 'Please enter a valid S3 Access Key ID.' : undefined),
+			)
 
-					return value.length < 10 ? 'Please enter a valid S3 Access Key ID.' : undefined
-				},
-			})
-
-			if (typeof newAccessKeyId !== 'string' || newAccessKeyId.length === 0) {
-				log.info('Operation cancelled.')
+			if (newAccessKeyId === undefined) {
 				return
 			}
 
@@ -100,21 +93,14 @@ export class S3FolderSync {
 			(await keytar.getPassword(KEYCHAIN_SERVICE, this.keychainSecretKeyAccount)) ?? undefined
 
 		if (secretAccessKey === undefined || secretAccessKey.length === 0) {
-			log.info('S3 Secret Access Key not found')
+			log.warn('S3 Secret Access Key not found')
 
-			const newSecretAccessKey = await text({
-				message: 'Please enter your S3 Secret Access Key:',
-				validate(value: string | undefined) {
-					if (value === undefined || value.length === 0) {
-						return 'A secret access key is required.'
-					}
+			const newSecretAccessKey = await promptForSecret(
+				'Please enter your S3 Secret Access Key:',
+				(value) => (value.length < 20 ? 'Please enter a valid S3 Secret Access Key.' : undefined),
+			)
 
-					return value.length < 20 ? 'Please enter a valid S3 Secret Access Key.' : undefined
-				},
-			})
-
-			if (typeof newSecretAccessKey !== 'string' || newSecretAccessKey.length === 0) {
-				log.info('Operation cancelled.')
+			if (newSecretAccessKey === undefined) {
 				return
 			}
 
