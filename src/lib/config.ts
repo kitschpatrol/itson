@@ -2,7 +2,30 @@
 // TODO separate update strategy from application
 // TODO just use brew?
 
+import os from 'node:os'
 import { z } from 'zod'
+
+/**
+ * Expand a leading `~` to the current user's home directory, the way a shell
+ * would. Also expands a `~` that directly follows `=`, so `--flag=~/path` style
+ * arguments work. Values without a tilde prefix are returned unchanged.
+ *
+ * @param value The path or argument to expand.
+ *
+ * @returns The value with tildes expanded.
+ */
+export function expandTilde(value: string): string {
+	return value.replaceAll(
+		/(^|=)~(?=\/|$)/gv,
+		(_match, prefix: string) => `${prefix}${os.homedir()}`,
+	)
+}
+
+/**
+ * A local path or command argument. A leading `~` (or `~` directly after `=`)
+ * is expanded to the home directory at load time.
+ */
+const localPathSchema = z.string().transform((value) => expandTilde(value))
 
 /**
  * Compile a regular expression from a source string, reporting failures as
@@ -49,7 +72,9 @@ const itsonUpdateStrategyGitHubSchema = z.object({
 	artifactPattern: regexPatternSchema.describe(
 		'Pattern matching the name of the release artifact to download.',
 	),
-	destination: z.string(),
+	destination: localPathSchema.describe(
+		'Where to install the downloaded artifact. A leading `~` is expanded to the home directory.',
+	),
 	owner: z.string(),
 	repo: z.string(),
 	type: z.literal('github'),
@@ -72,15 +97,24 @@ const itsonLogUploadStrategyS3Schema = z.object({
 		.describe(
 			'Minimatch patterns to ignore when uploading logs. These are applied in addition to a default set of common patterns.',
 		),
-	localPath: z.string(),
+	localPath: localPathSchema.describe(
+		'Local directory to upload logs from. A leading `~` is expanded to the home directory.',
+	),
 	remotePath: z.string().optional(),
 	type: z.literal('s3'),
 })
 
 const itsonConfigBaseSchema = z.object({
 	name: z.string(),
-	command: z.string(),
-	arguments: z.array(z.string()).optional(),
+	command: localPathSchema.describe(
+		'Executable to run, either a name on the PATH or a path. A leading `~` is expanded to the home directory.',
+	),
+	arguments: z
+		.array(localPathSchema)
+		.optional()
+		.describe(
+			'Arguments passed to the command. A leading `~`, or `~` directly after `=` (as in `--flag=~/path`), is expanded to the home directory.',
+		),
 	logUpload: itsonLogUploadStrategyS3Schema.optional(),
 	update: z
 		.discriminatedUnion('type', [

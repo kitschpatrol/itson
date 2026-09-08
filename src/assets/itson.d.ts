@@ -32,6 +32,10 @@ export type RegexPattern = RegExp | string | { flags?: string; source: string }
 export type ItsonUpdateStrategyGitHub = {
 	/** Pattern matching the name of the release artifact to download. */
 	artifactPattern: RegexPattern
+	/**
+	 * Where to install the downloaded artifact. A leading `~` is expanded to the
+	 * home directory.
+	 */
 	destination: string
 	owner: string
 	repo: string
@@ -62,6 +66,10 @@ export type ItsonLogUploadStrategyS3 = {
 	 * addition to a default set of common patterns.
 	 */
 	ignorePatterns?: string[]
+	/**
+	 * Local directory to upload logs from. A leading `~` is expanded to the home
+	 * directory.
+	 */
 	localPath: string
 	remotePath?: string
 	type: 's3'
@@ -72,7 +80,15 @@ export type ItsonLogUploadStrategyS3 = {
  */
 export type ItsonConfigApp = {
 	name: string
+	/**
+	 * Executable to run, either a name on the PATH or a path. A leading `~` is
+	 * expanded to the home directory.
+	 */
 	command: string
+	/**
+	 * Arguments passed to the command. A leading `~`, or `~` directly after `=`
+	 * (as in `--flag=~/path`), is expanded to the home directory.
+	 */
 	arguments?: string[]
 	logUpload?: ItsonLogUploadStrategyS3
 	/** Applications must not define a schedule. Use a task instead. */
@@ -85,7 +101,15 @@ export type ItsonConfigApp = {
  */
 export type ItsonConfigTask = {
 	name: string
+	/**
+	 * Executable to run, either a name on the PATH or a path. A leading `~` is
+	 * expanded to the home directory.
+	 */
 	command: string
+	/**
+	 * Arguments passed to the command. A leading `~`, or `~` directly after `=`
+	 * (as in `--flag=~/path`), is expanded to the home directory.
+	 */
 	arguments?: string[]
 	logUpload?: ItsonLogUploadStrategyS3
 	/**

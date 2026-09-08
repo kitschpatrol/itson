@@ -1,8 +1,12 @@
+// @case-police-ignore MacOS
+
+import { homedir } from 'node:os'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import type { ItsonConfigApp, ItsonConfigTask } from '../src/lib/config'
 import {
 	DEFAULT_ITSON_CONFIG,
+	expandTilde,
 	isApp,
 	isTask,
 	itsonConfig,
@@ -61,6 +65,101 @@ describe('isApp', () => {
 		}
 
 		expect(isApp(task)).toBe(false)
+	})
+})
+
+describe('expandTilde', () => {
+	const home = homedir()
+
+	it('should expand a leading ~/ to the home directory', () => {
+		expect(expandTilde('~/Exhibit/Ten Kings/Ten Kings.app')).toBe(
+			`${home}/Exhibit/Ten Kings/Ten Kings.app`,
+		)
+	})
+
+	it('should expand a bare ~', () => {
+		expect(expandTilde('~')).toBe(home)
+	})
+
+	it('should expand ~ directly after = in flag-style arguments', () => {
+		expect(expandTilde('--config=~/Exhibit/settings.json')).toBe(
+			`--config=${home}/Exhibit/settings.json`,
+		)
+	})
+
+	it('should leave absolute paths and plain values unchanged', () => {
+		expect(expandTilde('/opt/homebrew/bin/python3')).toBe('/opt/homebrew/bin/python3')
+		expect(expandTilde('interpose')).toBe('interpose')
+		expect(expandTilde('')).toBe('')
+	})
+
+	it('should not expand ~ in the middle of a value or for other users', () => {
+		expect(expandTilde('a~/b')).toBe('a~/b')
+		expect(expandTilde('~user/docs')).toBe('~user/docs')
+		expect(expandTilde('~foo')).toBe('~foo')
+	})
+})
+
+describe('tilde expansion', () => {
+	const home = homedir()
+
+	it('should expand ~ in command, arguments, localPath, and destination', () => {
+		const parsed = itsonConfigSchema.parse({
+			applications: [
+				{
+					name: 'Ten Kings',
+					command: '~/Exhibit/Ten Kings/Ten Kings.app/Contents/macOS/Ten Kings',
+					arguments: ['--config=~/Exhibit/settings.json', '~/Exhibit/data', 'plain'],
+					logUpload: {
+						bucketName: 'bucket',
+						endpoint: 'https://example.com/',
+						localPath: '~/Library/Logs/Ten Kings',
+						remotePath: '~/not-a-local-path',
+						type: 's3',
+					},
+					update: {
+						artifactPattern: 'zip$',
+						destination: '~/Exhibit/Ten Kings/Ten Kings.app',
+						owner: 'owner',
+						repo: 'repo',
+						type: 'github',
+					},
+				},
+			],
+		})
+
+		const app = parsed.applications[0]
+		if (app?.update?.type !== 'github' || app.logUpload === undefined) {
+			throw new Error('Expected a github update strategy and log upload config')
+		}
+
+		expect(app.command).toBe(`${home}/Exhibit/Ten Kings/Ten Kings.app/Contents/macOS/Ten Kings`)
+		expect(app.arguments).toEqual([
+			`--config=${home}/Exhibit/settings.json`,
+			`${home}/Exhibit/data`,
+			'plain',
+		])
+		expect(app.logUpload.localPath).toBe(`${home}/Library/Logs/Ten Kings`)
+		expect(app.logUpload.remotePath).toBe('~/not-a-local-path')
+		expect(app.update.destination).toBe(`${home}/Exhibit/Ten Kings/Ten Kings.app`)
+	})
+
+	it('should leave absolute paths and bare command names unchanged', () => {
+		const parsed = itsonConfigSchema.parse({
+			tasks: [
+				{
+					name: 'Reboot Cameras',
+					command: '/opt/homebrew/bin/python3',
+					arguments: ['/Users/user/reboot_cameras.py'],
+					schedule: '50 1 * * *',
+				},
+				{ name: 'Say', command: 'say', schedule: '@reboot' },
+			],
+		})
+
+		expect(parsed.tasks[0]?.command).toBe('/opt/homebrew/bin/python3')
+		expect(parsed.tasks[0]?.arguments).toEqual(['/Users/user/reboot_cameras.py'])
+		expect(parsed.tasks[1]?.command).toBe('say')
 	})
 })
 

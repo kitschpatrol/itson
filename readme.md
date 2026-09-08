@@ -110,6 +110,8 @@ export default {
 }
 ```
 
+Paths in `command`, `arguments`, `update.destination`, and `logUpload.localPath` may start with `~`, which is expanded to your home directory when the config is loaded. This also works for arguments like `--config=~/settings.json`.
+
 An optional `update` strategy may be specified.
 
 Currently, only updates from GitHub releases containing Python application packages or attached binary artifacts are supported.
