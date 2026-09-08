@@ -26,3 +26,6 @@ vendor/
 
 # Log rotation audit file dropped by lognow when running the CLI locally
 audit.json
+
+# Vitest 5 reports and attachments
+.vitest/

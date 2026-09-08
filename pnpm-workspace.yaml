@@ -17,3 +17,26 @@ allowBuilds:
   oxc-resolver: true
   unrs-resolver: true
   rollup: false
+minimumReleaseAgeExclude:
+  - '@clack/core@1.5.0'
+  - '@clack/prompts@1.8.0'
+  - '@kitschpatrol/cspell-config@8.8.0'
+  - '@kitschpatrol/eslint-config@8.8.0'
+  - '@kitschpatrol/knip-config@8.8.0'
+  - '@kitschpatrol/mdat-config@8.8.0'
+  - '@kitschpatrol/prettier-config@8.8.0'
+  - '@kitschpatrol/remark-config@8.8.0'
+  - '@kitschpatrol/repo-config@8.8.0'
+  - '@kitschpatrol/shared-config@8.8.0'
+  - '@kitschpatrol/stylelint-config@8.8.0'
+  - '@kitschpatrol/typescript-config@8.8.0'
+  - '@typescript-eslint/eslint-plugin@8.70.0'
+  - '@typescript-eslint/parser@8.70.0'
+  - '@typescript-eslint/project-service@8.70.0'
+  - '@typescript-eslint/scope-manager@8.70.0'
+  - '@typescript-eslint/tsconfig-utils@8.70.0'
+  - '@typescript-eslint/type-utils@8.70.0'
+  - '@typescript-eslint/types@8.70.0'
+  - '@typescript-eslint/typescript-estree@8.70.0'
+  - '@typescript-eslint/utils@8.70.0'
+  - '@typescript-eslint/visitor-keys@8.70.0'
