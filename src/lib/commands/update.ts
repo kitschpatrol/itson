@@ -5,7 +5,7 @@ import findVersions from 'find-versions'
 import keytar from 'keytar-forked'
 import { log } from 'lognow'
 import { createWriteStream } from 'node:fs'
-import { mkdir, rename, rm, stat } from 'node:fs/promises'
+import { mkdir, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
@@ -18,6 +18,7 @@ import {
 	getVersion,
 	promptForSecret,
 	redactSecret,
+	replacePath,
 	unzip,
 } from '../../lib/utilities.js'
 
@@ -403,12 +404,17 @@ export async function updateFromGitHubRelease(
 	if (pat !== undefined) {
 		for (const artifact of filteredArtifacts) {
 			let downloadedPath = await downloadReleaseAsset(artifact, pat)
-			if (downloadedPath !== undefined && destination.length > 0) {
-				const destinationPath = destination
-				await rm(destinationPath, { force: true, recursive: true })
-				await rename(downloadedPath, destinationPath)
-				downloadedPath = destinationPath
-				log.info(`Moved ${artifact.name} to ${destination}`)
+			if (downloadedPath !== undefined) {
+				try {
+					await replacePath(downloadedPath, destination)
+					downloadedPath = destination
+					log.info(`Moved ${artifact.name} to ${destination}`)
+				} catch (error) {
+					log.error(
+						`Error moving ${artifact.name} to ${destination}: ${error instanceof Error ? error.message : String(error)}`,
+					)
+					downloadedPath = undefined
+				}
 			}
 
 			downloadedPaths.push(downloadedPath)

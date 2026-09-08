@@ -2,7 +2,7 @@ import { text } from '@clack/prompts'
 import { execa } from 'execa'
 import isOnline from 'is-online'
 import { log } from 'lognow'
-import { readFile, unlink } from 'node:fs/promises'
+import { cp, readFile, rename, rm, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 /**
@@ -58,6 +58,67 @@ export async function promptForSecret(
  */
 export function redactSecret(value: string, secret: string): string {
 	return secret.length === 0 ? value : value.replaceAll(secret, '***')
+}
+
+/**
+ * Move a file or directory into place, replacing whatever is already there.
+ *
+ * The existing item is set aside as a sibling backup until the new one has
+ * landed, and restored if the move fails, so a failed update never leaves the
+ * destination empty. Falls back to a copy when the source is on a different
+ * volume, where rename isn't possible.
+ *
+ * @param sourcePath The freshly downloaded file or directory.
+ * @param destinationPath Where it should end up.
+ * @throws {Error} If the new item couldn't be moved into place. The previous
+ *   item is restored first.
+ */
+export async function replacePath(sourcePath: string, destinationPath: string): Promise<void> {
+	const backupPath = `${destinationPath}.itson-backup`
+	await rm(backupPath, { force: true, recursive: true })
+
+	let hasBackup = false
+	try {
+		await rename(destinationPath, backupPath)
+		hasBackup = true
+	} catch (error) {
+		if (!isFileNotFoundError(error)) {
+			throw error
+		}
+	}
+
+	try {
+		await moveAcrossVolumes(sourcePath, destinationPath)
+	} catch (error) {
+		if (hasBackup) {
+			await rm(destinationPath, { force: true, recursive: true })
+			await rename(backupPath, destinationPath)
+			log.warn(`Restored previous version at ${destinationPath} after a failed update`)
+		}
+
+		throw error
+	}
+
+	if (hasBackup) {
+		await rm(backupPath, { force: true, recursive: true })
+	}
+}
+
+async function moveAcrossVolumes(sourcePath: string, destinationPath: string): Promise<void> {
+	try {
+		await rename(sourcePath, destinationPath)
+	} catch (error) {
+		if (!(error instanceof Error) || !('code' in error) || error.code !== 'EXDEV') {
+			throw error
+		}
+
+		await cp(sourcePath, destinationPath, { recursive: true })
+		await rm(sourcePath, { force: true, recursive: true })
+	}
+}
+
+function isFileNotFoundError(error: unknown): boolean {
+	return error instanceof Error && 'code' in error && error.code === 'ENOENT'
 }
 
 /**

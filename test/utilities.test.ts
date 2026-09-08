@@ -1,8 +1,74 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { deleteFileSafe, promptForSecret, readFileSafe, redactSecret } from '../src/lib/utilities'
+import {
+	deleteFileSafe,
+	promptForSecret,
+	readFileSafe,
+	redactSecret,
+	replacePath,
+} from '../src/lib/utilities'
+
+describe('replacePath', () => {
+	let testDirectory: string
+
+	beforeEach(async () => {
+		testDirectory = join(
+			tmpdir(),
+			`itson-replace-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+		)
+		await mkdir(testDirectory, { recursive: true })
+	})
+
+	async function createBundle(name: string, content: string): Promise<string> {
+		const bundlePath = join(testDirectory, name)
+		await mkdir(join(bundlePath, 'Contents'), { recursive: true })
+		await writeFile(join(bundlePath, 'Contents', 'version.txt'), content, 'utf8')
+		return bundlePath
+	}
+
+	it('should replace an existing directory and remove the backup', async () => {
+		const source = await createBundle('New.app', 'new')
+		const destination = await createBundle('Old.app', 'old')
+
+		await replacePath(source, destination)
+
+		expect(await readFile(join(destination, 'Contents', 'version.txt'), 'utf8')).toBe('new')
+		await expect(stat(source)).rejects.toThrow('ENOENT')
+		await expect(stat(`${destination}.itson-backup`)).rejects.toThrow('ENOENT')
+	})
+
+	it('should move into place when nothing exists at the destination', async () => {
+		const source = await createBundle('New.app', 'new')
+		const destination = join(testDirectory, 'Fresh.app')
+
+		await replacePath(source, destination)
+
+		expect(await readFile(join(destination, 'Contents', 'version.txt'), 'utf8')).toBe('new')
+	})
+
+	it('should restore the previous version when the move fails', async () => {
+		const destination = await createBundle('Old.app', 'old')
+		const missingSource = join(testDirectory, 'Missing.app')
+
+		await expect(replacePath(missingSource, destination)).rejects.toThrow('ENOENT')
+
+		expect(await readFile(join(destination, 'Contents', 'version.txt'), 'utf8')).toBe('old')
+		await expect(stat(`${destination}.itson-backup`)).rejects.toThrow('ENOENT')
+	})
+
+	it('should replace a stale backup left by an earlier failure', async () => {
+		const source = await createBundle('New.app', 'new')
+		const destination = await createBundle('Old.app', 'old')
+		await createBundle('Old.app.itson-backup', 'stale')
+
+		await replacePath(source, destination)
+
+		expect(await readFile(join(destination, 'Contents', 'version.txt'), 'utf8')).toBe('new')
+		await expect(stat(`${destination}.itson-backup`)).rejects.toThrow('ENOENT')
+	})
+})
 
 describe('redactSecret', () => {
 	it('should replace every occurrence of the secret', () => {
