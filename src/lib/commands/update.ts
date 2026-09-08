@@ -266,11 +266,14 @@ async function updateFromGitHubPythonRelease(
 	}
 
 	// The PAT is embedded in the install URL, and execa echoes the full command
-	// in its error messages, so redact it before anything reaches the logs
+	// in its error messages, so redact it before anything reaches the logs.
+	// --force lets uv replace an executable it didn't record installing, which
+	// otherwise blocks the update with "Executable already exists".
 	try {
 		const { stdout } = await execa('uv', [
 			'tool',
 			'install',
+			'--force',
 			`git+https://${pat}@github.com/${owner}/${repo}@v${release.version}`,
 		])
 		log.info(redactSecret(stdout, pat))
