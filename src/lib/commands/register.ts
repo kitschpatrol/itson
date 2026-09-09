@@ -9,7 +9,7 @@ import { getCronStringDescription } from '../utilities/cron-to-launchd'
  */
 export async function register(config: ItsonConfig) {
 	// Keep the editor-facing config type definitions in ~/.itson fresh, without
-	// letting a failure interrupt an exhibit launch
+	// letting a failure interrupt the launch
 	try {
 		await dumpConfigTypes()
 	} catch (error) {

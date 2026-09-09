@@ -35,7 +35,7 @@ export default {
 		// 	},
 		// 	logUpload: {
 		// 		type: 's3',
-		// 		bucketName: 'exhibit-logs',
+		// 		bucketName: 'logs',
 		// 		endpoint: 'https://<account-id>.r2.cloudflarestorage.com',
 		// 		localPath: '~/Library/Logs/AllWork',
 		// 	},

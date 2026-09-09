@@ -27,9 +27,9 @@ describe('config authoring types', () => {
 				{
 					name: 'AllWork',
 					command: '/Applications/AllWork.app/Contents/MacOS/AllWork',
-					arguments: ['--config=/Users/user/Exhibit/AllWork/settings.json'],
+					arguments: ['--config=/Users/user/Applications/AllWork/settings.json'],
 					logUpload: {
-						bucketName: 'exhibit-logs',
+						bucketName: 'logs',
 						endpoint: 'https://example.r2.cloudflarestorage.com/',
 						ignorePatterns: ['*.log'],
 						localPath: '/Users/user/Library/Logs/AllWork',
@@ -55,7 +55,7 @@ describe('config authoring types', () => {
 				{
 					name: 'Reboot Cameras',
 					command: '/opt/homebrew/bin/python3',
-					arguments: ['/Users/user/Exhibit/reboot_cameras.py'],
+					arguments: ['/Users/user/Applications/reboot_cameras.py'],
 					schedule: '0 1 * * *',
 				},
 			],

@@ -72,9 +72,7 @@ describe('expandTilde', () => {
 	const home = homedir()
 
 	it('should expand a leading ~/ to the home directory', () => {
-		expect(expandTilde('~/Exhibit/Ten Kings/Ten Kings.app')).toBe(
-			`${home}/Exhibit/Ten Kings/Ten Kings.app`,
-		)
+		expect(expandTilde('~/Applications/AllWork.app')).toBe(`${home}/Applications/AllWork.app`)
 	})
 
 	it('should expand a bare ~', () => {
@@ -82,8 +80,8 @@ describe('expandTilde', () => {
 	})
 
 	it('should expand ~ directly after = in flag-style arguments', () => {
-		expect(expandTilde('--config=~/Exhibit/settings.json')).toBe(
-			`--config=${home}/Exhibit/settings.json`,
+		expect(expandTilde('--config=~/Applications/settings.json')).toBe(
+			`--config=${home}/Applications/settings.json`,
 		)
 	})
 
@@ -107,19 +105,19 @@ describe('tilde expansion', () => {
 		const parsed = itsonConfigSchema.parse({
 			applications: [
 				{
-					name: 'Ten Kings',
-					command: '~/Exhibit/Ten Kings/Ten Kings.app/Contents/macOS/Ten Kings',
-					arguments: ['--config=~/Exhibit/settings.json', '~/Exhibit/data', 'plain'],
+					name: 'AllWork',
+					command: '~/Applications/AllWork.app/Contents/macOS/AllWork',
+					arguments: ['--config=~/Applications/settings.json', '~/Applications/data', 'plain'],
 					logUpload: {
 						bucketName: 'bucket',
 						endpoint: 'https://example.com/',
-						localPath: '~/Library/Logs/Ten Kings',
+						localPath: '~/Library/Logs/AllWork',
 						remotePath: '~/not-a-local-path',
 						type: 's3',
 					},
 					update: {
 						artifactPattern: 'zip$',
-						destination: '~/Exhibit/Ten Kings/Ten Kings.app',
+						destination: '~/Applications/AllWork.app',
 						owner: 'owner',
 						repo: 'repo',
 						type: 'github',
@@ -133,15 +131,15 @@ describe('tilde expansion', () => {
 			throw new Error('Expected a github update strategy and log upload config')
 		}
 
-		expect(app.command).toBe(`${home}/Exhibit/Ten Kings/Ten Kings.app/Contents/macOS/Ten Kings`)
+		expect(app.command).toBe(`${home}/Applications/AllWork.app/Contents/macOS/AllWork`)
 		expect(app.arguments).toEqual([
-			`--config=${home}/Exhibit/settings.json`,
-			`${home}/Exhibit/data`,
+			`--config=${home}/Applications/settings.json`,
+			`${home}/Applications/data`,
 			'plain',
 		])
-		expect(app.logUpload.localPath).toBe(`${home}/Library/Logs/Ten Kings`)
+		expect(app.logUpload.localPath).toBe(`${home}/Library/Logs/AllWork`)
 		expect(app.logUpload.remotePath).toBe('~/not-a-local-path')
-		expect(app.update.destination).toBe(`${home}/Exhibit/Ten Kings/Ten Kings.app`)
+		expect(app.update.destination).toBe(`${home}/Applications/AllWork.app`)
 	})
 
 	it('should leave absolute paths and bare command names unchanged', () => {
@@ -198,7 +196,7 @@ describe('name validation', () => {
 		expect(blank.success).toBe(false)
 
 		const slash = itsonConfigSchema.safeParse({
-			applications: [{ name: 'Ten/Kings', command: 'app' }],
+			applications: [{ name: 'All/Work', command: 'app' }],
 		})
 		expect(slash.success).toBe(false)
 		expect(z.prettifyError(slash.error!)).toContain('applications[0].name')
@@ -207,14 +205,14 @@ describe('name validation', () => {
 	it('should reject duplicate names within applications or within tasks', () => {
 		const result = itsonConfigSchema.safeParse({
 			applications: [
-				{ name: 'Ten Kings', command: 'a' },
-				{ name: 'Ten Kings', command: 'b' },
+				{ name: 'AllWork', command: 'a' },
+				{ name: 'AllWork', command: 'b' },
 			],
 		})
 
 		expect(result.success).toBe(false)
 		expect(z.prettifyError(result.error!)).toContain('applications[1].name')
-		expect(z.prettifyError(result.error!)).toContain('Duplicate application name "Ten Kings"')
+		expect(z.prettifyError(result.error!)).toContain('Duplicate application name "AllWork"')
 	})
 
 	it('should allow an application and a task to share a name', () => {
