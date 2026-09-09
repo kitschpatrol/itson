@@ -8,6 +8,7 @@ import { hideBin } from 'yargs/helpers'
 import { z } from 'zod'
 import type { ItsonConfigInput } from '../lib/config'
 import { name, version } from '../../package.json'
+import { editConfig } from '../lib/commands/config'
 import { uploadAllLogs } from '../lib/commands/log-upload'
 import { register } from '../lib/commands/register'
 import { reset } from '../lib/commands/reset'
@@ -21,27 +22,45 @@ setDefaultLogOptions({ logJsonToFile: true, name })
 // Config
 // `_configFile` is the path c12 actually loaded, `configFile` is just the
 // name it searched for and is set even when nothing was found
-const { _configFile: configFile, config: rawConfig } = await loadConfig<ItsonConfigInput>({
-	cwd: os.homedir(), // Rcfile search in home dir doesn't seem to work...
-	defaultConfig: DEFAULT_ITSON_CONFIG,
-	globalRc: true,
-	name: 'itson',
-})
+let configFile: string | undefined
+let rawConfig: ItsonConfigInput = {}
+let configLoadError: Error | undefined
 
-if (configFile === undefined) {
-	log.warn(
-		`No itson config file found. Create ${os.homedir()}/itson.config.js (or .ts, or .json) to manage applications and tasks.`,
-	)
+try {
+	const loaded = await loadConfig<ItsonConfigInput>({
+		cwd: os.homedir(), // Rcfile search in home dir doesn't seem to work...
+		defaultConfig: DEFAULT_ITSON_CONFIG,
+		globalRc: true,
+		name: 'itson',
+	})
+	configFile = loaded._configFile
+	rawConfig = loaded.config
+} catch (error) {
+	// A config file that fails to parse still has to be openable with `itson
+	// config`, so hold on to the failure until the command is known
+	configLoadError = error instanceof Error ? error : new Error(String(error))
 }
 
 const parsedConfig = itsonConfigSchema.safeParse(rawConfig)
-if (!parsedConfig.success) {
-	log.error(`Invalid itson configuration${configFile === undefined ? '' : ` at "${configFile}"`}:`)
-	log.error(z.prettifyError(parsedConfig.error))
+
+// The fallback lets logging start up before the middleware reports the problem,
+// which exits every command but `config`. It's parsed fresh rather than shared
+// with `DEFAULT_ITSON_CONFIG`, since the middleware writes to it.
+const config = parsedConfig.success ? parsedConfig.data : itsonConfigSchema.parse({})
+
+/**
+ * Report a problem with the config file. Fatal everywhere except in the
+ * `config` command, since opening the file is how these get fixed.
+ */
+function reportConfigProblem(message: string, isConfigCommand: boolean): void {
+	if (isConfigCommand) {
+		log.warn(message)
+		return
+	}
+
+	log.error(message)
 	process.exit(1)
 }
-
-const config = parsedConfig.data
 
 /**
  * Run one phase of a multi-step command, logging failures instead of letting
@@ -86,6 +105,22 @@ await yargsInstance
 		log.debug('Verbose logging enabled')
 		log.debug(`Logging to file: "${getJsonFileTransportDestinations().at(0)}"`)
 		log.withMetadata({ config }).debug('Loaded config:')
+
+		const isConfigCommand = argv._.at(0) === 'config'
+
+		if (configLoadError !== undefined) {
+			reportConfigProblem(
+				`Could not load itson configuration: ${configLoadError.message}`,
+				isConfigCommand,
+			)
+		} else if (!parsedConfig.success) {
+			reportConfigProblem(
+				`Invalid itson configuration${configFile === undefined ? '' : ` at "${configFile}"`}:\n${z.prettifyError(parsedConfig.error)}`,
+				isConfigCommand,
+			)
+		} else if (configFile === undefined && !isConfigCommand) {
+			log.warn('No itson config file found. Run "itson config" to create one.')
+		}
 	})
 	.command(
 		['$0', 'launch'],
@@ -160,6 +195,16 @@ await yargsInstance
 		},
 		async () => {
 			await register(config)
+		},
+	)
+	.command(
+		'config',
+		'Open the itson config file in the default editor, creating a starter config file if none exists.',
+		() => {
+			/* Empty */
+		},
+		async () => {
+			await editConfig(configFile)
 		},
 	)
 	.command(

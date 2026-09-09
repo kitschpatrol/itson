@@ -77,6 +77,8 @@ This command runs automatically at system startup when `runOnStartup: true` in y
 
 Create an `itson.config.js`, `itson.config.ts`, or `itson.config.json` file in your home directory.
 
+Or run `itson config`, which opens your configuration file in the default editor, creating a commented starter `~/itson.config.ts` if you don't have one yet.
+
 `~/itson.config.js`:
 
 ```js
@@ -193,6 +195,7 @@ itson [command]
 | `update`      | Update all managed applications and tasks to the latest available versions.                                               |
 | `upload-logs` | Upload all application and task logs to the configured S3 bucket.                                                         |
 | `register`    | Register itson with the system according to the config file. Optionally run this after changing state in the config file. |
+| `config`      | Open the itson config file in the default editor, creating a starter config file if none exists.                          |
 | `reset`       | Clear any credentials stored in the system keychain, and remove any registered services.                                  |
 
 | Option              | Description                                                              | Type      |
