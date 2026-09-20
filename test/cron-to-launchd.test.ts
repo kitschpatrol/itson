@@ -31,13 +31,11 @@ function countUniqueIntervals(entry: LaunchdPlistFragment): number {
  * Count the number of scheduling intervals (Calendar or Start)
  */
 function countIntervals(xmlOutput: string): number {
-	// Check for StartInterval (simple repeating jobs)
-	if (xmlOutput.includes('<key>StartInterval</key>')) {
-		return 1 // StartInterval represents one repeating schedule
-	}
-
-	// Check for RunAtLoad (boot-time jobs)
-	if (xmlOutput.includes('<key>RunAtLoad</key>')) {
+	// Simple repeating jobs and boot-time jobs each represent one schedule
+	if (
+		xmlOutput.includes('<key>StartInterval</key>') ||
+		xmlOutput.includes('<key>RunAtLoad</key>')
+	) {
 		return 1
 	}
 

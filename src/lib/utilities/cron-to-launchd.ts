@@ -75,13 +75,11 @@ export function cronToPlistFragment(cronString: string): LaunchdPlistFragment {
 
 		// Case 1: Single non-zero second value (e.g., '1 * * * * *')
 		if (secondValues.length === 1 && secondValues[0] !== 0) {
-			const error = allOtherFieldsWild
-				? new Error(
-						`Invalid seconds value: ${secondValues[0]}. Single second values must be 0, not ${secondValues[0]}.`,
-					)
-				: new Error(
-						`Invalid seconds value: ${secondValues[0]}. Seconds field can only be used when all other fields (minute, hour, day, month, weekday) are wildcards.`,
-					)
+			const error = new Error(
+				allOtherFieldsWild
+					? `Invalid seconds value: ${secondValues[0]}. Single second values must be 0, not ${secondValues[0]}.`
+					: `Invalid seconds value: ${secondValues[0]}. Seconds field can only be used when all other fields (minute, hour, day, month, weekday) are wildcards.`,
+			)
 			throw error
 		}
 
@@ -292,18 +290,16 @@ function getConsistentSecondInterval(values: number[]): number | undefined {
 
 	const interval = secondValue - firstValue
 
-	if (
+	return (
 		// Values start at zero
 		firstValue === 0 &&
-		// Interval is consistent
-		values.every((value, index) => value - firstValue === interval * index) &&
-		// Values cover the full minute
-		(values.at(-1) ?? 0) + interval >= 60
-	) {
-		return interval
-	}
-
-	return undefined
+			// Interval is consistent
+			values.every((value, index) => value - firstValue === interval * index) &&
+			// Values cover the full minute
+			(values.at(-1) ?? 0) + interval >= 60
+			? interval
+			: undefined
+	)
 }
 
 /**
@@ -323,9 +319,5 @@ function deduplicateWeekdays(values: number[]): number[] {
 	}
 
 	// If only 7 is present, convert it to 0
-	if (hasSeven && !hasZero) {
-		return values.map((v) => (v === 7 ? 0 : v))
-	}
-
-	return values
+	return hasSeven && !hasZero ? values.map((v) => (v === 7 ? 0 : v)) : values
 }

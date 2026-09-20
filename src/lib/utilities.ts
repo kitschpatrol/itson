@@ -31,11 +31,7 @@ export async function promptForSecret(
 	const value = await text({
 		message,
 		validate(value: string | undefined) {
-			if (value === undefined || value.length === 0) {
-				return 'A value is required.'
-			}
-
-			return validate(value)
+			return value === undefined || value.length === 0 ? 'A value is required.' : validate(value)
 		},
 	})
 

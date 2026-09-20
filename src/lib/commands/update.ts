@@ -316,11 +316,7 @@ async function downloadReleaseAsset(
 		const fileStats = await stat(filePath)
 		log.debug(`Downloaded ${asset.name} (${(fileStats.size / 1024).toFixed(2)} KB) to ${filePath}`)
 
-		if (asset.name.endsWith('.zip')) {
-			return await unzip(filePath)
-		}
-
-		return filePath
+		return asset.name.endsWith('.zip') ? await unzip(filePath) : filePath
 	} catch (error) {
 		log.error(`Error downloading asset: ${error instanceof Error ? error.message : String(error)}`)
 		return undefined

@@ -63,11 +63,9 @@ const regexPatternSchema = z
 			return value
 		}
 
-		if (typeof value === 'string') {
-			return compileRegex(value, undefined, context)
-		}
-
-		return compileRegex(value.source, value.flags, context)
+		return typeof value === 'string'
+			? compileRegex(value, undefined, context)
+			: compileRegex(value.source, value.flags, context)
 	})
 
 const itsonUpdateStrategyGitHubSchema = z.object({

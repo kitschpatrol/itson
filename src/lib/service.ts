@@ -133,12 +133,14 @@ export async function unregisterOrphans(config: ItsonConfig): Promise<number> {
 	let deletedCount = 0
 	for (const plistPath of plistPaths) {
 		const plistName = path.basename(plistPath, '.plist')
-		if (!activePlistNames.has(plistName)) {
-			await execa('launchctl', ['bootout', `${guiDomain}/${plistName}`], { reject: false })
-			await deleteFileSafe(plistPath)
-			log.debug(`Unloaded orphaned launchd service from ${plistPath}`)
-			deletedCount++
+		if (activePlistNames.has(plistName)) {
+			continue
 		}
+
+		await execa('launchctl', ['bootout', `${guiDomain}/${plistName}`], { reject: false })
+		await deleteFileSafe(plistPath)
+		log.debug(`Unloaded orphaned launchd service from ${plistPath}`)
+		deletedCount++
 	}
 
 	return deletedCount
