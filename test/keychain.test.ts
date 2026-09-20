@@ -1,5 +1,5 @@
 /**
- * End-to-end keychain tests using keytar-forked.
+ * End-to-end keychain tests using `@github/keytar`.
  *
  * These tests exercise the real macOS Keychain Services API to verify that
  * credential storage works as it would in production.
@@ -13,7 +13,7 @@
  * On non-macOS platforms, the entire test suite is skipped.
  */
 
-import type keytarModule from 'keytar-forked'
+import type keytarModule from '@github/keytar'
 import { afterAll, describe, expect, it } from 'vitest'
 
 const TEST_SERVICE = `itson-cli-test-${Date.now()}`
@@ -25,7 +25,7 @@ const describeOnMac = isMac ? describe : describe.skip
 // Only import keytar on macOS to avoid native module load errors on Linux
 let kt: typeof keytarModule
 if (isMac) {
-	const keytarImport = await import('keytar-forked')
+	const keytarImport = await import('@github/keytar')
 	kt = keytarImport.default
 }
 

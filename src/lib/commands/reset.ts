@@ -1,4 +1,4 @@
-import keytar from 'keytar-forked'
+import keytar from '@github/keytar'
 import { log } from 'lognow'
 import plur from 'plur'
 import { KEYCHAIN_SERVICE } from '../../lib/constants.js'

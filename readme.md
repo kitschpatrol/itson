@@ -271,6 +271,7 @@ Though the tool itself is written in TypeScript, the actual functionality is pro
 
 #### Keychain
 
+- [@github/keytar](https://github.com/github/node-keytar)
 - [keytar-forked](https://github.com/shiftkey/node-keytar)
 - [node-keytar](https://github.com/makeproaudio/node-keytar)
 

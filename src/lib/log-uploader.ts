@@ -1,5 +1,5 @@
 import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import keytar from 'keytar-forked'
+import keytar from '@github/keytar'
 import { log } from 'lognow'
 import { minimatch } from 'minimatch'
 import { createHash } from 'node:crypto'

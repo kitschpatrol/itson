@@ -1,8 +1,8 @@
 // @case-police-ignore Api
+import keytar from '@github/keytar'
 import { Octokit } from '@octokit/rest'
 import { execa } from 'execa'
 import findVersions from 'find-versions'
-import keytar from 'keytar-forked'
 import { log } from 'lognow'
 import { createWriteStream } from 'node:fs'
 import { mkdir, stat } from 'node:fs/promises'

@@ -13,7 +13,7 @@ overrides:
   normalize-package-data: ^9.0.0
 allowBuilds:
   esbuild: true
-  keytar-forked: true
   oxc-resolver: true
   unrs-resolver: true
   rollup: false
+  '@github/keytar': true
