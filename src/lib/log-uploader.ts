@@ -6,7 +6,6 @@ import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { basename, join, relative, sep } from 'node:path'
-import plur from 'plur'
 import type { ItsonLogUploadStrategyS3 } from './config'
 import { KEYCHAIN_SERVICE } from './constants'
 import { promptForSecret } from './utilities'
@@ -25,6 +24,17 @@ const IGNORE_PATTERNS = [
 ]
 
 const TRAILING_SLASH_REGEX = /\/$/v
+
+/**
+ * What a sync did: files uploaded because they didn't exist remotely, files
+ * uploaded because the local copy was newer or different, and files left
+ * alone.
+ */
+export type SyncResult = {
+	newCount: number
+	skippedCount: number
+	updatedCount: number
+}
 
 export class S3FolderSync {
 	private static get keychainAccessKeyAccount() {
@@ -111,60 +121,46 @@ export class S3FolderSync {
 	}
 
 	/**
-	 * Perform the sync operation
+	 * Upload every local file that is new or changed since it was last synced.
+	 * Remote files are never deleted.
+	 *
+	 * @returns Counts of what was done.
+	 * @throws {Error} If credentials are unavailable or any S3 operation fails.
 	 */
-	async sync(): Promise<void> {
-		log.info(`Starting sync from ${this.config.localPath} to S3 bucket ${this.config.bucketName}`)
-
-		try {
-			// Initialize client with credentials
-			if (!(await this.initializeClient())) {
-				log.error('Failed to initialize S3 client - credentials not available')
-				return
-			}
-
-			// Get all local files
-			log.debug('Scanning local files...')
-			const localFiles = await this.getLocalFiles(this.config.localPath)
-			log.debug(`Found ${localFiles.length} local files`)
-
-			// Get all remote files
-			log.debug('Fetching remote file list...')
-			const remoteFiles = await this.getRemoteFiles()
-			log.debug(`Found ${remoteFiles.size} remote files`)
-
-			let newCount = 0
-			let updatedCount = 0
-			let skippedCount = 0
-
-			// Process each local file
-			for (const localFilePath of localFiles) {
-				const remoteKey = this.getRemoteKey(localFilePath)
-				const remoteFile = remoteFiles.get(remoteKey)
-
-				if (await this.shouldUpload(localFilePath, remoteFile)) {
-					await this.uploadFile(localFilePath)
-
-					if (remoteFile === undefined) {
-						newCount++
-					} else {
-						updatedCount++
-					}
-				} else {
-					log.debug(`Skipping (up to date): ${localFilePath}`)
-					skippedCount++
-				}
-			}
-
-			const uploadedCount = newCount + updatedCount
-			log.debug('Sync completed:')
-			log.info(`Uploaded: ${uploadedCount} log ${plur('file', uploadedCount)}`)
-			log.debug(`New: ${newCount} ${plur('file', newCount)}`)
-			log.debug(`Updated: ${updatedCount} ${plur('file', updatedCount)}`)
-			log.debug(`Skipped: ${skippedCount} ${plur('file', skippedCount)}`)
-		} catch (error) {
-			log.withError(error).error('Sync failed:')
+	async sync(): Promise<SyncResult> {
+		if (!(await this.initializeClient())) {
+			throw new Error('S3 credentials not available')
 		}
+
+		log.debug('Scanning local files...')
+		const localFiles = await this.getLocalFiles(this.config.localPath)
+		log.debug(`Found ${localFiles.length} local files`)
+
+		log.debug('Fetching remote file list...')
+		const remoteFiles = await this.getRemoteFiles()
+		log.debug(`Found ${remoteFiles.size} remote files`)
+
+		const result: SyncResult = { newCount: 0, skippedCount: 0, updatedCount: 0 }
+
+		for (const localFilePath of localFiles) {
+			const remoteKey = this.getRemoteKey(localFilePath)
+			const remoteFile = remoteFiles.get(remoteKey)
+
+			if (await this.shouldUpload(localFilePath, remoteFile)) {
+				await this.uploadFile(localFilePath)
+
+				if (remoteFile === undefined) {
+					result.newCount++
+				} else {
+					result.updatedCount++
+				}
+			} else {
+				log.debug(`Skipping (up to date): ${localFilePath}`)
+				result.skippedCount++
+			}
+		}
+
+		return result
 	}
 
 	/**

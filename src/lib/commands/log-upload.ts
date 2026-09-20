@@ -1,4 +1,5 @@
 import { log } from 'lognow'
+import plur from 'plur'
 import type { ItsonConfig, ItsonConfigApp, ItsonConfigTask } from '../config'
 import { S3FolderSync } from '../log-uploader'
 import { checkOnline } from '../utilities'
@@ -27,12 +28,14 @@ export async function uploadLogs(appOrTask: ItsonConfigApp | ItsonConfigTask) {
 
 	const logUploader = new S3FolderSync(appOrTask.logUpload)
 	try {
-		await logUploader.sync()
+		const { newCount, skippedCount, updatedCount } = await logUploader.sync()
+		const uploadedCount = newCount + updatedCount
+		log.info(
+			`Uploaded ${uploadedCount} log ${plur('file', uploadedCount)} for ${appOrTask.name} (${newCount} new, ${updatedCount} updated, ${skippedCount} up to date)`,
+		)
 	} catch (error) {
-		log.error(`Error uploading logs for ${appOrTask.name}: ${String(error)}`)
+		log.withError(error).error(`Log upload for ${appOrTask.name} failed:`)
 	}
-
-	log.info(`Logs uploaded for ${appOrTask.name}`)
 }
 
 /**

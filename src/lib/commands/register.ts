@@ -1,5 +1,7 @@
 import { log } from 'lognow'
+import plur from 'plur'
 import type { ItsonConfig } from '../config'
+import type { ServiceOutcome } from '../service'
 import { dumpConfigTypes } from '../config-types'
 import { registerItson, startService, unregisterItson, unregisterOrphans } from '../service'
 import { getCronStringDescription } from '../utilities/cron-to-launchd'
@@ -21,21 +23,43 @@ export async function register(config: ItsonConfig) {
 	// Itson is a special case task!
 	// Register itson if appropriate
 	if (config.runOnStartup) {
-		log.info('Registering itson to run on startup')
-		await registerItson()
+		logRegistrationOutcome('itson', 'on startup', await registerItson())
+	} else if (await unregisterItson()) {
+		log.info('Unregistered itson from running on startup')
 	} else {
-		log.info('Unregistering itson from running on startup')
-		await unregisterItson()
+		log.debug('itson is not registered to run on startup')
 	}
 
 	// Clean up tasks missing from the config
-	await unregisterOrphans(config)
+	const orphanCount = await unregisterOrphans(config)
+	if (orphanCount > 0) {
+		log.info(`Removed ${orphanCount} orphaned ${plur('service', orphanCount)}`)
+	}
 
 	// Register tasks with the OS
 	for (const task of config.tasks) {
-		log.info(`Registering task ${task.name} to run at ${getCronStringDescription(task.schedule)}`)
-		await startService(task)
+		const schedule = lowercaseFirstLetter(getCronStringDescription(task.schedule))
+		logRegistrationOutcome(`task ${task.name}`, schedule, await startService(task))
 	}
 
 	// Applications are registered right before being started by itson in `start`
+}
+
+/**
+ * Report a registration at info level only when something changed, so a routine
+ * launch doesn't read as if everything was re-registered.
+ */
+function logRegistrationOutcome(name: string, schedule: string, outcome: ServiceOutcome): void {
+	if (outcome === 'registered') {
+		log.info(`Registered ${name} to run ${schedule}`)
+	} else if (outcome === 'updated') {
+		log.info(`Updated ${name} to run ${schedule}`)
+	} else {
+		log.debug(`${name} is already registered to run ${schedule}`)
+	}
+}
+
+/** Cron descriptions come back sentence-cased, e.g. "At 01:50 AM". */
+function lowercaseFirstLetter(value: string): string {
+	return value.charAt(0).toLowerCase() + value.slice(1)
 }

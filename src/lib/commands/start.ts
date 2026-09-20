@@ -10,6 +10,12 @@ export async function startAllApps(config: ItsonConfig) {
 
 	// Start all applications (not tasks!)
 	for (const app of config.applications) {
-		await startService(app)
+		const outcome = await startService(app)
+
+		if (outcome === 'unchanged') {
+			log.debug(`${app.name} is already running`)
+		} else {
+			log.info(`${outcome === 'updated' ? 'Restarted' : 'Started'} ${app.name}`)
+		}
 	}
 }

@@ -84,8 +84,8 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 
 			const { startService } = await import('../src/lib/service')
 
-			// Should not throw
-			await startService(testApp)
+			const outcome = await startService(testApp)
+			expect(outcome).toBe('registered')
 
 			// Verify plist file was created
 			const label = `com.itson.app.E2eApp-${testSuffix}`
@@ -104,7 +104,8 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 
 			const { startService } = await import('../src/lib/service')
 
-			await startService(testTask)
+			const outcome = await startService(testTask)
+			expect(outcome).toBe('registered')
 
 			const label = `com.itson.task.E2eTask-${testSuffix}`
 			const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
@@ -121,8 +122,10 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 
 			const { startService } = await import('../src/lib/service')
 
-			// Calling startService again should not throw
-			await expect(startService(testApp)).resolves.toBeUndefined()
+			// The plist is unchanged, so the service must not be re-registered.
+			// The echo app exits immediately, so it may or may not need starting.
+			const outcome = await startService(testApp)
+			expect(['started', 'unchanged']).toContain(outcome)
 		})
 	})
 
@@ -151,7 +154,10 @@ describeOnMac('Service Management (macOS)', { timeout: 30_000 }, () => {
 			await startService(testTask)
 
 			// Now unregister
-			await unregisterService(testTask)
+			expect(await unregisterService(testTask)).toBe(true)
+
+			// A second unregister has nothing left to remove
+			expect(await unregisterService(testTask)).toBe(false)
 
 			// Verify plist file was removed
 			const label = `com.itson.task.E2eTask-${testSuffix}`

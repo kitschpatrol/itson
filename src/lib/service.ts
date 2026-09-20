@@ -29,18 +29,38 @@ async function getServiceState(label: string): Promise<{ isLoaded: boolean; isRu
 }
 
 /**
+ * What {@link startService} had to do to bring a service to its desired state.
+ *
+ * - `registered`: the service was not loaded, so its plist was written and
+ *   bootstrapped. Applications are also started.
+ * - `updated`: the plist changed, so the service was reloaded. Applications are
+ *   also restarted.
+ * - `started`: the application was already registered but not running, so it was
+ *   started. Never returned for tasks.
+ * - `unchanged`: nothing needed to be done.
+ */
+export type ServiceOutcome = 'registered' | 'started' | 'unchanged' | 'updated'
+
+/**
  * On macOS, register a service with launchd. Applications start immediately and
  * will keep running. Tasks start on schedule and will run once and then stop.
  * They will not run immediately.
  *
+ * Idempotent: the plist is only rewritten and the service only reloaded when
+ * the generated plist differs from the one on disk or the service isn't
+ * loaded.
+ *
+ * @returns What was done to bring the service to its desired state.
  * @public
  */
-export async function startService(appOrTask: ItsonConfigApp | ItsonConfigTask) {
+export async function startService(
+	appOrTask: ItsonConfigApp | ItsonConfigTask,
+): Promise<ServiceOutcome> {
 	if (process.platform !== 'darwin') {
 		throw new Error('Daemonization is currently only supported on macOS.')
 	}
 
-	log.info(`Starting service for ${appOrTask.name}`)
+	log.debug(`Syncing service for ${appOrTask.name}`)
 
 	const label = getServiceLabel(appOrTask)
 	const guiDomain = getGuiDomain()
@@ -80,6 +100,8 @@ export async function startService(appOrTask: ItsonConfigApp | ItsonConfigTask) 
 		isPlistChanged = true
 	}
 
+	let outcome: ServiceOutcome = 'unchanged'
+
 	try {
 		if (isLoaded && isPlistChanged) {
 			log.debug(`Booting out service ${label} to apply changes`)
@@ -94,16 +116,23 @@ export async function startService(appOrTask: ItsonConfigApp | ItsonConfigTask) 
 		if (!isLoaded || isPlistChanged) {
 			log.debug('Bootstrapping service')
 			await execa('launchctl', ['bootstrap', guiDomain, plistPath])
+			outcome = isLoaded ? 'updated' : 'registered'
 		}
 
 		// Applications start immediately and will keep running.
 		// Tasks don't!
 		if (isApp(appOrTask)) {
-			if (isRunning) {
+			// A booted-out application is no longer running, whatever the state
+			// check said before the plist was reloaded
+			if (isRunning && !isPlistChanged) {
 				log.debug(`Service ${label} is already running, not starting again.`)
 			} else {
 				log.debug(`Starting service ${label} now`)
 				await execa('launchctl', ['kickstart', `${guiDomain}/${label}`])
+
+				if (outcome === 'unchanged') {
+					outcome = 'started'
+				}
 			}
 		}
 	} catch (error) {
@@ -112,6 +141,8 @@ export async function startService(appOrTask: ItsonConfigApp | ItsonConfigTask) 
 		)
 		throw error
 	}
+
+	return outcome
 }
 
 /**
@@ -178,13 +209,17 @@ export async function unregisterAll() {
 /**
  * Unregister an application stops the service and removes the plist file
  *
+ * @returns True if the service was registered and has now been removed, false
+ *   if there was nothing to remove.
  * @public
  */
-export async function unregisterService(appOrTask: ItsonConfigApp | ItsonConfigTask) {
+export async function unregisterService(
+	appOrTask: ItsonConfigApp | ItsonConfigTask,
+): Promise<boolean> {
 	await stopService(appOrTask)
 	const label = getServiceLabel(appOrTask)
 	const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`)
-	await deleteFileSafe(plistPath)
+	return deleteFileSafe(plistPath)
 }
 
 /**
@@ -205,14 +240,18 @@ const itsonTask: ItsonConfigTask = {
 
 /**
  * Register itson to run on startup.
+ *
+ * @returns What was done to bring the registration to its desired state.
  */
-export async function registerItson() {
-	await startService(itsonTask)
+export async function registerItson(): Promise<ServiceOutcome> {
+	return startService(itsonTask)
 }
 
 /**
- * Unregister itson
+ * Unregister itson from running on startup.
+ *
+ * @returns True if itson was registered and has now been removed.
  */
-export async function unregisterItson() {
-	await unregisterService(itsonTask)
+export async function unregisterItson(): Promise<boolean> {
+	return unregisterService(itsonTask)
 }
