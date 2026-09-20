@@ -8,6 +8,7 @@ import {
 	readFileSafe,
 	redactSecret,
 	replacePath,
+	waitForOnline,
 } from '../src/lib/utilities'
 
 describe('replacePath', () => {
@@ -197,5 +198,49 @@ describe('deleteFileSafe', () => {
 
 		const second = await deleteFileSafe(filePath)
 		expect(second).toBe(false)
+	})
+})
+
+describe('waitForOnline', () => {
+	function createProbe(results: boolean[]) {
+		const calls: Array<{ timeout: number }> = []
+		// The stub resolves synchronously, so there is nothing to await
+		// eslint-disable-next-line ts/require-await
+		const probe = async (options: { timeout: number }) => {
+			calls.push(options)
+			return results.shift() ?? false
+		}
+
+		return { calls, probe }
+	}
+
+	it('should return true on the first successful probe', async () => {
+		const { calls, probe } = createProbe([true])
+		const result = await waitForOnline({ probe, retryDelay: 1, totalTimeout: 1000 })
+		expect(result).toBe(true)
+		expect(calls).toHaveLength(1)
+	})
+
+	it('should retry until a probe succeeds', async () => {
+		const { calls, probe } = createProbe([false, false, true])
+		const result = await waitForOnline({ probe, retryDelay: 1, totalTimeout: 1000 })
+		expect(result).toBe(true)
+		expect(calls).toHaveLength(3)
+	})
+
+	it('should give up after the total timeout', async () => {
+		const { calls, probe } = createProbe([])
+		const startTime = Date.now()
+		const result = await waitForOnline({ probe, retryDelay: 5, totalTimeout: 50 })
+		expect(result).toBe(false)
+		// The last retry is skipped once there is no time left for another attempt
+		expect(Date.now() - startTime).toBeGreaterThanOrEqual(45)
+		expect(calls.length).toBeGreaterThan(1)
+	})
+
+	it('should pass the attempt timeout to each probe', async () => {
+		const { calls, probe } = createProbe([false, true])
+		await waitForOnline({ attemptTimeout: 123, probe, retryDelay: 1, totalTimeout: 1000 })
+		expect(calls.every((call) => call.timeout === 123)).toBe(true)
 	})
 })

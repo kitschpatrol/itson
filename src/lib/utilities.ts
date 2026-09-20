@@ -2,8 +2,11 @@ import { text } from '@clack/prompts'
 import { execa } from 'execa'
 import isOnline from 'is-online'
 import { log } from 'lognow'
+import { subscribe } from 'node:diagnostics_channel'
 import { cp, readFile, rename, rm, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
+import { z } from 'zod'
 
 /**
  * Prompt the user for a secret in the terminal.
@@ -241,15 +244,127 @@ export async function deleteFileSafe(path: string): Promise<boolean> {
 }
 
 /**
- * Check whether the internet is reachable. The result is memoized for the
- * lifetime of the process, so multiple phases of a single run share one check
- * and an offline machine only waits out the timeout once.
+ * Upper bound on one round of connectivity probes. Kept short so every attempt
+ * sees the network as it is now, rather than as it was when itson launched.
+ */
+const ONLINE_ATTEMPT_TIMEOUT_MS = 5000
+
+/** Pause between failed attempts. */
+const ONLINE_RETRY_DELAY_MS = 3000
+
+/**
+ * How long to keep trying before treating the machine as offline. At startup
+ * itson can launch before DHCP has finished, so the network may only become
+ * usable some seconds into this window.
+ */
+const ONLINE_WAIT_MS = 90_000
+
+/**
+ * Check whether the internet is reachable, waiting for it to come up if it
+ * isn't yet. The result is memoized for the lifetime of the process, so
+ * multiple phases of a single run share one check and an offline machine only
+ * waits out the window once.
  *
  * @returns True if the internet is reachable, false otherwise.
  */
 export async function checkOnline(): Promise<boolean> {
-	onlineCheck ??= isOnline({ timeout: 60_000 })
+	onlineCheck ??= waitForOnline()
 	return onlineCheck
 }
 
 let onlineCheck: Promise<boolean> | undefined
+
+/**
+ * Options for {@link waitForOnline}, exposed for testing.
+ */
+export type WaitForOnlineOptions = {
+	/** Upper bound on a single probe round, in milliseconds. */
+	attemptTimeout?: number
+	/** The connectivity probe to run on each attempt. */
+	probe?: (options: { timeout: number }) => Promise<boolean>
+	/** Pause between failed attempts, in milliseconds. */
+	retryDelay?: number
+	/** Total time to keep trying, in milliseconds. */
+	totalTimeout?: number
+}
+
+/**
+ * Repeatedly probe for internet access until a probe succeeds or the total
+ * timeout elapses.
+ *
+ * Each attempt is a fresh probe with a short timeout. A single long-running
+ * probe can't do this, because its DNS lookups and connection attempts all
+ * happen at the start, and a network that comes up part way through the wait is
+ * never retried.
+ *
+ * @returns True if a probe succeeded within the window, false otherwise.
+ */
+export async function waitForOnline(options: WaitForOnlineOptions = {}): Promise<boolean> {
+	const {
+		attemptTimeout = ONLINE_ATTEMPT_TIMEOUT_MS,
+		probe = isOnline,
+		retryDelay = ONLINE_RETRY_DELAY_MS,
+		totalTimeout = ONLINE_WAIT_MS,
+	} = options
+
+	logProbeFailures()
+
+	const startTime = Date.now()
+
+	for (let attempt = 1; ; attempt++) {
+		if (await probe({ timeout: attemptTimeout })) {
+			if (attempt > 1) {
+				log.info(`Internet access detected after ${formatElapsedSeconds(startTime)}s`)
+			}
+
+			return true
+		}
+
+		if (Date.now() - startTime + retryDelay >= totalTimeout) {
+			return false
+		}
+
+		log.debug(
+			`No internet access yet after ${formatElapsedSeconds(startTime)}s (attempt ${attempt}), retrying`,
+		)
+		await sleep(retryDelay)
+	}
+}
+
+function formatElapsedSeconds(startTime: number): string {
+	return ((Date.now() - startTime) / 1000).toFixed(1)
+}
+
+const probeFailureSchema = z.object({
+	error: z.object({
+		code: z.string().optional(),
+		message: z.string(),
+		name: z.string(),
+	}),
+	url: z.string(),
+})
+
+let isLoggingProbeFailures = false
+
+/**
+ * Log the reason each individual connectivity probe fails. The is-online
+ * package only reports these on a diagnostics channel, so without this the logs
+ * show that a check failed but not why.
+ */
+function logProbeFailures(): void {
+	if (isLoggingProbeFailures) {
+		return
+	}
+
+	isLoggingProbeFailures = true
+
+	subscribe('is-online:connectivity-check', (message) => {
+		const parsed = probeFailureSchema.safeParse(message)
+		if (!parsed.success) {
+			return
+		}
+
+		const { error, url } = parsed.data
+		log.debug(`Connectivity probe failed: ${url} (${error.code ?? error.name}: ${error.message})`)
+	})
+}
