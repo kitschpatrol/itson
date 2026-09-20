@@ -133,7 +133,8 @@ export class S3FolderSync {
 			const remoteFiles = await this.getRemoteFiles()
 			log.debug(`Found ${remoteFiles.size} remote files`)
 
-			let uploadedCount = 0
+			let newCount = 0
+			let updatedCount = 0
 			let skippedCount = 0
 
 			// Process each local file
@@ -143,19 +144,24 @@ export class S3FolderSync {
 
 				if (await this.shouldUpload(localFilePath, remoteFile)) {
 					await this.uploadFile(localFilePath)
-					uploadedCount++
+
+					if (remoteFile === undefined) {
+						newCount++
+					} else {
+						updatedCount++
+					}
 				} else {
 					log.debug(`Skipping (up to date): ${localFilePath}`)
 					skippedCount++
 				}
 			}
 
+			const uploadedCount = newCount + updatedCount
 			log.debug('Sync completed:')
 			log.info(`Uploaded: ${uploadedCount} log ${plur('file', uploadedCount)}`)
+			log.debug(`New: ${newCount} ${plur('file', newCount)}`)
+			log.debug(`Updated: ${updatedCount} ${plur('file', updatedCount)}`)
 			log.debug(`Skipped: ${skippedCount} ${plur('file', skippedCount)}`)
-			log.debug(
-				`Remote files preserved: ${remoteFiles.size - uploadedCount} ${plur('file', remoteFiles.size - uploadedCount)}`,
-			)
 		} catch (error) {
 			log.withError(error).error('Sync failed:')
 		}

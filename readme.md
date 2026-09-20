@@ -243,7 +243,7 @@ Itson is currently **not** concerned with the following:
 
 Itson itself is not a long-running process. It runs once at startup, and then hands over responsibility for application monitoring to the operating system's native service-management facilities.
 
-Though the tool itself is written in TypeScript, the actual functionality is provided by platform-native implementations wherever possible. (E.g. `launchd` for process management, the system keychain for credential storage.)
+Though the tool is written in TypeScript, the actual functionality is provided by platform-native implementations wherever possible. (E.g. `launchd` for process management, the system keychain for credential storage.)
 
 #### System configuration
 
