@@ -34,13 +34,13 @@
 		"clean-deep": "shx rm -f pnpm-lock.yaml && git clean -fdX -e !.claude/",
 		"fix": "ksc fix",
 		"lint": "ksc lint",
-		"release": "bumpp --commit 'Release: %s' && pnpm build && pnpm publish --otp $(op item get npm --otp)",
+		"release": "bumpp --commit 'Release: %s' && pnpm build && pnpm publish --otp $(op item get npm --otp) && brewpub --tap kitschpatrol/tap",
 		"test": "vitest run",
 		"test:install": "pnpm link",
 		"test:uninstall": "pnpm remove -g itson"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.1136.0",
+		"@aws-sdk/client-s3": "^3.1137.0",
 		"@clack/prompts": "^1.8.1",
 		"@github/keytar": "^7.10.6",
 		"@octokit/rest": "^22.0.1",
@@ -50,12 +50,12 @@
 		"execa": "^10.0.1",
 		"find-versions": "^6.0.0",
 		"is-online": "^12.0.2",
-		"lognow": "^0.8.2",
+		"lognow": "^0.8.3",
 		"minimatch": "^10.2.6",
 		"plist": "^5.0.0",
 		"plur": "^6.0.0",
 		"semver": "^7.8.5",
-		"yargs": "^18.1.0",
+		"yargs": "^18.2.0",
 		"zod": "^4.6.5"
 	},
 	"devDependencies": {
@@ -63,6 +63,7 @@
 		"@types/node": "~24.13.4",
 		"@types/semver": "^7.8.0",
 		"@types/yargs": "^17.0.35",
+		"brewpub": "^0.2.0",
 		"bumpp": "^12.3.0",
 		"mdat-plugin-cli-help": "^3.2.0",
 		"publint": "^0.3.24",

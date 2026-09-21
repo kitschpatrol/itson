@@ -58,10 +58,22 @@ Installing Python application packages requires [uv](https://docs.astral.sh/uv/)
 ### Installation
 
 ```sh
+brew install kitschpatrol/tap/itson
+```
+
+_or_
+
+```sh
 npm install --global itson
 ```
 
 ### Updating
+
+```sh
+brew upgrade itson
+```
+
+_or_
 
 ```sh
 npm update --global itson

@@ -17,3 +17,7 @@ allowBuilds:
   unrs-resolver: true
   rollup: false
   '@github/keytar': true
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-s3@3.1137.0'
+  - brewpub@0.2.0
+  - yargs@18.2.0
