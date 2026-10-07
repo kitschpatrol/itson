@@ -1,6 +1,6 @@
 import { cspellConfig } from '@kitschpatrol/cspell-config'
 
 export default cspellConfig({
-	ignorePaths: ['itson.config.ts', 'itson-setup-mac.sh'],
+	ignorePaths: ['itson-setup-mac.sh'],
 	words: ['AKIAIOSFODNN', 'libsecret', 'svcinstall'],
 })

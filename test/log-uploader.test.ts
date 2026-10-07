@@ -27,6 +27,8 @@ const TRAILING_SLASH_REGEX = /\/$/v
 
 const APP_LOG_REGEX = /app\.log$/v
 
+const LOCAL_PATH = '/home/user/logs'
+
 /**
  * Mirrors S3FolderSync.shouldIgnoreFile logic
  */
@@ -45,8 +47,8 @@ function shouldIgnoreFile(filePath: string, localPath: string, ignorePatterns: s
 /**
  * Mirrors S3FolderSync.getRemoteKey logic
  */
-function getRemoteKey(localFilePath: string, localPath: string, remotePath?: string): string {
-	const relativePath = relative(localPath, localFilePath)
+function getRemoteKey(localFilePath: string, remotePath?: string): string {
+	const relativePath = relative(LOCAL_PATH, localFilePath)
 	const remoteKey = relativePath.split(sep).join('/')
 
 	return remotePath === undefined || remotePath.length === 0
@@ -125,32 +127,32 @@ describe('Ignore Patterns', () => {
 
 describe('Remote Key Generation', () => {
 	it('should generate key relative to local path', () => {
-		const key = getRemoteKey('/home/user/logs/app.log', '/home/user/logs')
+		const key = getRemoteKey('/home/user/logs/app.log')
 		expect(key).toBe('app.log')
 	})
 
 	it('should handle nested paths', () => {
-		const key = getRemoteKey('/home/user/logs/2024/01/app.log', '/home/user/logs')
+		const key = getRemoteKey('/home/user/logs/2024/01/app.log')
 		expect(key).toBe('2024/01/app.log')
 	})
 
 	it('should prepend remote path when provided', () => {
-		const key = getRemoteKey('/home/user/logs/app.log', '/home/user/logs', 'exhibit-1/logs')
+		const key = getRemoteKey('/home/user/logs/app.log', 'exhibit-1/logs')
 		expect(key).toBe('exhibit-1/logs/app.log')
 	})
 
 	it('should strip trailing slash from remote path', () => {
-		const key = getRemoteKey('/home/user/logs/app.log', '/home/user/logs', 'exhibit-1/logs/')
+		const key = getRemoteKey('/home/user/logs/app.log', 'exhibit-1/logs/')
 		expect(key).toBe('exhibit-1/logs/app.log')
 	})
 
 	it('should handle remote path without trailing slash', () => {
-		const key = getRemoteKey('/home/user/logs/subdir/app.log', '/home/user/logs', 'remote/prefix')
+		const key = getRemoteKey('/home/user/logs/subdir/app.log', 'remote/prefix')
 		expect(key).toBe('remote/prefix/subdir/app.log')
 	})
 
 	it('should handle no remote path', () => {
-		const key = getRemoteKey('/home/user/logs/subdir/file.txt', '/home/user/logs')
+		const key = getRemoteKey('/home/user/logs/subdir/file.txt')
 		expect(key).toBe('subdir/file.txt')
 	})
 })

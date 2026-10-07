@@ -9,15 +9,26 @@ publicHoistPattern:
   - '*prettier*'
   - '*remark*'
   - '*stylelint*'
+peerDependencyRules:
+  allowedVersions:
+    eslint-plugin-jsx-a11y@6.10.2>eslint: '10'
 overrides:
   normalize-package-data: ^9.0.0
 allowBuilds:
   esbuild: true
   oxc-resolver: true
   unrs-resolver: true
-  rollup: false
   '@github/keytar': true
 minimumReleaseAgeExclude:
-  - '@aws-sdk/client-s3@3.1137.0'
-  - brewpub@0.2.0
-  - yargs@18.2.0
+  - '@kitschpatrol/cspell-config@8.12.1'
+  - '@kitschpatrol/eslint-config@8.12.1'
+  - '@kitschpatrol/knip-config@8.12.1'
+  - '@kitschpatrol/mdat-config@8.12.1'
+  - '@kitschpatrol/prettier-config@8.12.1'
+  - '@kitschpatrol/remark-config@8.12.1'
+  - '@kitschpatrol/repo-config@8.12.1'
+  - '@kitschpatrol/shared-config@8.12.1'
+  - '@kitschpatrol/stylelint-config@8.12.1'
+  - '@kitschpatrol/typescript-config@8.12.1'
+  - lognow@0.8.5
+  - '@kitschpatrol/safe-stable-stringify@2.5.0-fork.2'

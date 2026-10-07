@@ -87,7 +87,7 @@ type GitHubRelease = {
  *
  * @public
  */
-export async function getAllReleases(owner: string, repo: string): Promise<GitHubRelease[]> {
+export async function getAllReleases(owner: string, repository: string): Promise<GitHubRelease[]> {
 	const pat = await getGitHubPat()
 	if (pat === undefined) {
 		return []
@@ -100,7 +100,7 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 			owner,
 			// eslint-disable-next-line ts/naming-convention
 			per_page: 100,
-			repo,
+			repo: repository,
 			// Pagination can span many requests, so the limit applies per page
 			request: { signal: AbortSignal.timeout(API_TIMEOUT_MS) },
 		})
@@ -115,7 +115,7 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 		}))
 	} catch (error) {
 		log.error(
-			`Error fetching releases for ${owner}/${repo}: ${error instanceof Error ? error.message : String(error)}`,
+			`Error fetching releases for ${owner}/${repository}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return []
 	}
@@ -124,7 +124,10 @@ export async function getAllReleases(owner: string, repo: string): Promise<GitHu
 /**
  * Get the latest release info from a GitHub repository
  */
-async function getLatestRelease(owner: string, repo: string): Promise<GitHubRelease | undefined> {
+async function getLatestRelease(
+	owner: string,
+	repository: string,
+): Promise<GitHubRelease | undefined> {
 	const pat = await getGitHubPat()
 	if (pat === undefined) {
 		return
@@ -135,7 +138,7 @@ async function getLatestRelease(owner: string, repo: string): Promise<GitHubRele
 	try {
 		const { data: latestRelease } = await octokit.repos.getLatestRelease({
 			owner,
-			repo,
+			repo: repository,
 		})
 
 		return {
@@ -148,7 +151,7 @@ async function getLatestRelease(owner: string, repo: string): Promise<GitHubRele
 		}
 	} catch (error) {
 		log.error(
-			`Error fetching latest release for ${owner}/${repo}: ${error instanceof Error ? error.message : String(error)}`,
+			`Error fetching latest release for ${owner}/${repository}: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return undefined
 	}
@@ -161,15 +164,15 @@ async function getLatestRelease(owner: string, repo: string): Promise<GitHubRele
  */
 export async function getBestReleaseForConstraint(
 	owner: string,
-	repo: string,
+	repository: string,
 	versionConstraint?: string,
 ): Promise<GitHubRelease | undefined> {
 	// If no constraint provided, use latest release
 	if (versionConstraint === undefined || versionConstraint.length === 0) {
-		return getLatestRelease(owner, repo)
+		return getLatestRelease(owner, repository)
 	}
 
-	const allReleases = await getAllReleases(owner, repo)
+	const allReleases = await getAllReleases(owner, repository)
 	if (allReleases.length === 0) {
 		return undefined
 	}
@@ -206,7 +209,7 @@ async function updateFromGitHubPythonRelease(
 	/** For Logging only */
 	name: string,
 	owner: string,
-	repo: string,
+	repository: string,
 	cli: string,
 	versionConstraint?: string,
 ): Promise<void> {
@@ -224,7 +227,7 @@ async function updateFromGitHubPythonRelease(
 		return
 	}
 
-	const release = await getBestReleaseForConstraint(owner, repo, versionConstraint)
+	const release = await getBestReleaseForConstraint(owner, repository, versionConstraint)
 
 	if (!release) {
 		return
@@ -274,12 +277,12 @@ async function updateFromGitHubPythonRelease(
 			'tool',
 			'install',
 			'--force',
-			`git+https://${pat}@github.com/${owner}/${repo}@v${release.version}`,
+			`git+https://${pat}@github.com/${owner}/${repository}@v${release.version}`,
 		])
 		log.info(redactSecret(stdout, pat))
 	} catch (error) {
 		log.error(
-			`Error installing ${owner}/${repo}@v${release.version}: ${redactSecret(error instanceof Error ? error.message : String(error), pat)}`,
+			`Error installing ${owner}/${repository}@v${release.version}: ${redactSecret(error instanceof Error ? error.message : String(error), pat)}`,
 		)
 	}
 }
@@ -333,7 +336,7 @@ export async function updateFromGitHubRelease(
 	/** For Logging only */
 	name: string,
 	owner: string,
-	repo: string,
+	repository: string,
 	destination: string,
 	artifactPattern: RegExp,
 	versionConstraint?: string,
@@ -354,7 +357,7 @@ export async function updateFromGitHubRelease(
 		return downloadedPaths
 	}
 
-	const release = await getBestReleaseForConstraint(owner, repo, versionConstraint)
+	const release = await getBestReleaseForConstraint(owner, repository, versionConstraint)
 
 	if (!release) {
 		return downloadedPaths
@@ -391,7 +394,7 @@ export async function updateFromGitHubRelease(
 
 	if (filteredArtifacts.length === 0) {
 		log.warn(
-			`No matching release assets found for "${owner}/${repo}" with version ${release.version}.`,
+			`No matching release assets found for "${owner}/${repository}" with version ${release.version}.`,
 		)
 		return downloadedPaths
 	}

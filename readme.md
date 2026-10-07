@@ -11,12 +11,13 @@
 [![NPM Package itson](https://img.shields.io/npm/v/itson.svg)](https://www.npmjs.com/package/itson)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit)
 [![CI](https://github.com/kitschpatrol/itson/actions/workflows/ci.yml/badge.svg)](https://github.com/kitschpatrol/itson/actions/workflows/ci.yml)
+[![Homebrew](https://img.shields.io/badge/Homebrew-kitschpatrol%2Ftap%2Fitson-FBB040?logo=homebrew&logoColor=white)](https://github.com/kitschpatrol/homebrew-tap/blob/HEAD/Formula/itson.rb)
 
 <!-- /badges -->
 
 <!-- short-description -->
 
-**A CLI tool for configuration-driven management of long-running interactive applications.**
+**CLI tool for configuration-driven management of long-running interactive applications.**
 
 <!-- /short-description -->
 
@@ -47,25 +48,41 @@ Itson does the following each time it runs:
 
 ## Getting started
 
+<!-- dependencies -->
+
 ### Dependencies
+
+- [Node.js](https://nodejs.org/) 24.16.0 or newer (specifically `^24.16.0 || >=26.3.0`)
+
+<!-- /dependencies -->
 
 Itson is architected with future cross-platform support in mind, but currently only provides implementations for macOS.
 
-Itson requires [Node](https://nodejs.org/) 24.16.0+.
-
 Installing Python application packages requires [uv](https://docs.astral.sh/uv/).
 
+<!-- install -->
+
 ### Installation
+
+Run it once without installing:
+
+```sh
+npx itson
+```
+
+Or install it globally with Homebrew:
 
 ```sh
 brew install kitschpatrol/tap/itson
 ```
 
-_or_
+Or install it globally with npm:
 
 ```sh
 npm install --global itson
 ```
+
+<!-- /install -->
 
 ### Updating
 
@@ -185,7 +202,7 @@ In JSON, regular expression values like `artifactPattern` are written as a patte
 
 ### Commands
 
-<!-- cli-help ({depth: 1}) -->
+<!-- cli-help ({depth: 1, heading: false, headingLevel: 3}) -->
 
 #### Command: `itson`
 

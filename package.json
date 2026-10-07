@@ -1,12 +1,13 @@
 {
 	"name": "itson",
 	"version": "0.7.6",
-	"description": "A CLI tool for configuration-driven management of long-running interactive applications.",
+	"description": "CLI tool for configuration-driven management of long-running interactive applications.",
 	"keywords": [
 		"cli",
 		"process",
 		"manager",
-		"updater"
+		"updater",
+		"npm-package"
 	],
 	"homepage": "https://github.com/kitschpatrol/itson",
 	"bugs": "https://github.com/kitschpatrol/itson/issues",
@@ -34,23 +35,24 @@
 		"clean-deep": "shx rm -f pnpm-lock.yaml && git clean -fdX -e !.claude/",
 		"fix": "ksc fix",
 		"lint": "ksc lint",
+		"prepare": "skills experimental_sync -y -f",
 		"release": "bumpp --commit 'Release: %s' && pnpm build && pnpm publish --otp $(op item get npm --otp) && brewpub --tap kitschpatrol/tap",
 		"test": "vitest run",
 		"test:install": "pnpm link",
 		"test:uninstall": "pnpm remove -g itson"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.1137.0",
+		"@aws-sdk/client-s3": "^3.1146.0",
 		"@clack/prompts": "^1.8.1",
 		"@github/keytar": "^7.10.6",
 		"@octokit/rest": "^22.0.1",
 		"c12": "^3.3.4",
 		"cron-parser": "^5.10.1",
-		"cronstrue": "^3.27.0",
+		"cronstrue": "^3.29.0",
 		"execa": "^10.0.1",
 		"find-versions": "^6.0.0",
 		"is-online": "^12.0.2",
-		"lognow": "^0.8.3",
+		"lognow": "^0.8.5",
 		"minimatch": "^10.2.6",
 		"plist": "^5.0.0",
 		"plur": "^6.0.0",
@@ -59,21 +61,22 @@
 		"zod": "^4.6.5"
 	},
 	"devDependencies": {
-		"@kitschpatrol/shared-config": "^8.9.0",
+		"@kitschpatrol/shared-config": "^8.12.1",
 		"@types/node": "~24.13.4",
 		"@types/semver": "^7.8.0",
 		"@types/yargs": "^17.0.35",
-		"brewpub": "^0.2.0",
+		"brewpub": "^0.5.0",
 		"bumpp": "^12.3.0",
-		"mdat-plugin-cli-help": "^3.2.0",
-		"publint": "^0.3.24",
+		"mdat-plugin-cli-help": "^3.4.0",
+		"publint": "^0.3.25",
 		"shx": "^0.4.0",
+		"skills": "^1.7.0",
 		"tsdown": "^0.23.0",
 		"typescript": "~6.0.3",
-		"vitest": "^5.0.1"
+		"vitest": "^5.0.3"
 	},
-	"packageManager": "pnpm@12.4.1",
+	"packageManager": "pnpm@12.9.1",
 	"engines": {
-		"node": ">=24.16.0"
+		"node": "^24.16.0 || >=26.3.0"
 	}
 }
