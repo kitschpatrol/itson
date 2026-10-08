@@ -3,10 +3,6 @@
 	"compilerOptions": {
 		// ESNext instead of the base config's ES2025 for Array.fromAsync
 		"lib": ["ESNext", "DOM"],
-		// TypeScript 6.0 no longer includes @types packages automatically
 		"types": ["node"]
-		// Consider enabling for new projects
-		// https://www.typescriptlang.org/tsconfig/#exactOptionalPropertyTypes
-		// "exactOptionalPropertyTypes": true
 	}
 }

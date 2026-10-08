@@ -1,7 +1,17 @@
+allowBuilds:
+  '@github/keytar': true
+  unrs-resolver: true
+overrides:
+  normalize-package-data: ^9.0.0
+peerDependencyRules:
+  allowedVersions:
+    # Remove once the installed version declares ESLint 10 support.
+    # https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/issues/1075
+    # https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/pull/1081
+    eslint-plugin-jsx-a11y@6>eslint: ^10.0.0
 publicHoistPattern:
   - '@kitschpatrol/repo-config'
   - '@kitschpatrol/typescript-config'
-  - 'case-police'
   - '*cspell*'
   - '*eslint*'
   - '*knip*'
@@ -9,26 +19,4 @@ publicHoistPattern:
   - '*prettier*'
   - '*remark*'
   - '*stylelint*'
-peerDependencyRules:
-  allowedVersions:
-    eslint-plugin-jsx-a11y@6.10.2>eslint: '10'
-overrides:
-  normalize-package-data: ^9.0.0
-allowBuilds:
-  esbuild: true
-  oxc-resolver: true
-  unrs-resolver: true
-  '@github/keytar': true
-minimumReleaseAgeExclude:
-  - '@kitschpatrol/cspell-config@8.12.1'
-  - '@kitschpatrol/eslint-config@8.12.1'
-  - '@kitschpatrol/knip-config@8.12.1'
-  - '@kitschpatrol/mdat-config@8.12.1'
-  - '@kitschpatrol/prettier-config@8.12.1'
-  - '@kitschpatrol/remark-config@8.12.1'
-  - '@kitschpatrol/repo-config@8.12.1'
-  - '@kitschpatrol/shared-config@8.12.1'
-  - '@kitschpatrol/stylelint-config@8.12.1'
-  - '@kitschpatrol/typescript-config@8.12.1'
-  - lognow@0.8.5
-  - '@kitschpatrol/safe-stable-stringify@2.5.0-fork.2'
+  - 'case-police'
