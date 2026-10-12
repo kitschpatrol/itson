@@ -1,21 +1,6 @@
 allowBuilds:
   '@github/keytar': true
-  esbuild: true
-  oxc-resolver: true
   unrs-resolver: true
-minimumReleaseAgeExclude:
-  - '@kitschpatrol/cspell-config@8.13.1'
-  - '@kitschpatrol/eslint-config@8.13.1'
-  - '@kitschpatrol/knip-config@8.13.1'
-  - '@kitschpatrol/mdat-config@8.13.1'
-  - '@kitschpatrol/prettier-config@8.13.1'
-  - '@kitschpatrol/remark-config@8.13.1'
-  - '@kitschpatrol/repo-config@8.13.1'
-  - '@kitschpatrol/safe-stable-stringify@2.5.0-fork.2'
-  - '@kitschpatrol/shared-config@8.13.1'
-  - '@kitschpatrol/stylelint-config@8.13.1'
-  - '@kitschpatrol/typescript-config@8.13.1'
-  - lognow@0.8.5
 overrides:
   normalize-package-data: ^9.0.0
 peerDependencyRules:
