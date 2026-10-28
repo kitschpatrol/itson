@@ -81,11 +81,7 @@ export async function startService(
 
 	const { isLoaded, isRunning } = await getServiceState(label)
 
-	if (isLoaded) {
-		log.debug(`Service ${label} is already loaded.`)
-	} else {
-		log.debug(`Service ${label} is not loaded.`)
-	}
+	log.debug(isLoaded ? `Service ${label} is already loaded.` : `Service ${label} is not loaded.`)
 
 	if (isRunning) {
 		log.debug(`Service ${label} is running.`)

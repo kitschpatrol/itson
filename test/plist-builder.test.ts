@@ -7,11 +7,10 @@ import { createAppPlist } from '../src/lib/utilities/plist-builder'
 const OUT_LOG_REGEX = /com\.itson\.app\.LogTest\.out\.log$/v
 const ERR_LOG_REGEX = /com\.itson\.app\.LogTest\.err\.log$/v
 
-type PlistRecord = Record<string, unknown>
-type PlistEnv = Record<string, string>
-
 describe('createAppPlist', () => {
+	type PlistRecord = Record<string, unknown>
 	it('should generate a valid plist for a keep-alive application', () => {
+		type PlistEnv = Record<string, string>
 		const result = createAppPlist({
 			command: '/usr/local/bin/my-app',
 			keepAlive: true,
