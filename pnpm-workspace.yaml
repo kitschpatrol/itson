@@ -1,6 +1,8 @@
 allowBuilds:
   '@github/keytar': true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@kitschpatrol/chagent@0.4.0'
 overrides:
   normalize-package-data: ^9.0.0
 peerDependencyRules:
